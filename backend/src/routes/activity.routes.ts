@@ -16,4 +16,4 @@ activityRouter.get('/activities', (c) => activityController.getActivities(c));
 
 activityRouter.post('/activities', (c) => activityController.saveActivity(c));
 
-activityRouter.get('/streak', (c) => activityController.saveActivity(c));
+activityRouter.get('/streak', (c) => activityController.getStreak(c));
