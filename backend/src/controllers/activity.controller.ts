@@ -7,7 +7,7 @@ export class ActivityController {
     async saveActivity(c: Context) {
         const { id: userId } = c.get('jwtPayload');
         const body = await c.req.json();
-        const activity = await this.activityService.saveActivity(body.date, body.description, userId, body.completed);
+        const activity = await this.activityService.saveActivity(body.date, body.description, userId);
         return c.json(activity, 201);
     }
     async getActivities(c: Context) {

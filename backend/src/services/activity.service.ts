@@ -1,11 +1,12 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client/edge";
 import { HTTPException } from "hono/http-exception";
 
 export class ActivityService {
-    constructor(private db : PrismaClient){}
+    constructor(private db : PrismaClient | any) { }
 
-    async saveActivity(userId : string, date : Date, description : string, completed : boolean){
+    async saveActivity(date: Date, description: string, userId: string){
         try {
+            // console.log(`userId: ${userId}, date: ${date}, description: ${description}`);
             return await this.db.activity.upsert({
                 where : {
                     userId_date : {
@@ -14,18 +15,17 @@ export class ActivityService {
                     },
                 },
                 update : {
-                    completed,
                     description
                 },
                 create : {
                     userId,
-                    date,
+                    date : new Date(date),
                     description,
-                    completed
+                    
                 },
             })
         } catch (error : any) {
-            throw new HTTPException(500, { message : 'Failed to save activity'});
+            throw new HTTPException(500, { message : `Failed to save activity ${error.message}` });
         }
     }
 
@@ -42,7 +42,7 @@ export class ActivityService {
             },
             orderBy : {
                 date : 'desc'
-            }
+            },
         })
     }
 
@@ -50,7 +50,6 @@ export class ActivityService {
         const activities = await this.db.activity.findMany({
             where : {
                 userId,
-                completed : true,
                 date : {
                     lte : new Date()
                 }
