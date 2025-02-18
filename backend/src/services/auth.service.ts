@@ -1,9 +1,9 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client/edge";
 import { HTTPException } from "hono/http-exception";
 import * as bcrypt from 'bcryptjs';
 
 export class AuthService {
-    constructor(private db: PrismaClient) { }
+    constructor(private db: PrismaClient | any) { }
 
     async registerUser(username: string,
         name: string,
@@ -38,9 +38,9 @@ export class AuthService {
         }
     }
 
-    async verifyUser(username : string, password : string){
+    async verifyUser(email : string, password : string){
         const user = await this.db.user.findUnique({
-            where : { username },
+            where : { email },
         })
 
         if(!user){
