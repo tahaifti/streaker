@@ -10,6 +10,9 @@ export const authRouter = new Hono<{
         JWT_SECRET: string
     }
 }>();
+// Endpoint structure
+// POST /auth/register - Register a new user
+// POST /auth/login - Login a user
 
 authRouter.post('/register', (c) => {
     const prisma = new PrismaClient({
@@ -19,6 +22,7 @@ authRouter.post('/register', (c) => {
     const authController = new AuthController(authService);
     return authController.registerUser(c)
 });
+
 authRouter.post('/login', (c) => {
     const prisma = new PrismaClient({
         datasourceUrl: c.env?.DATABASE_URL

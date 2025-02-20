@@ -14,6 +14,7 @@ export const activityRouter = new Hono<{
 
 activityRouter.use('/*', authMiddleware);
 
+// GET api/activity/activities - Get all activities
 activityRouter.get('/activities', (c) => {
     const prisma = new PrismaClient({
         datasourceUrl: c.env?.DATABASE_URL
@@ -23,6 +24,7 @@ activityRouter.get('/activities', (c) => {
     return activityController.getActivities(c)
 });
 
+// POST api/activity/activities - Save an activity
 activityRouter.post('/activities', (c) => {
     const prisma = new PrismaClient({
         datasourceUrl: c.env?.DATABASE_URL
@@ -32,6 +34,7 @@ activityRouter.post('/activities', (c) => {
     return activityController.saveActivity(c)
 });
 
+// GET api/activity/streak - Get the current streak
 activityRouter.get('/streak', (c) => {
     const prisma = new PrismaClient({
         datasourceUrl: c.env?.DATABASE_URL
