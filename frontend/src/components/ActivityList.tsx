@@ -1,10 +1,11 @@
 import React from 'react';
 import { CheckCircle, Clock } from 'lucide-react';
+// import axios from 'axios';
 
 interface Activity {
-  id: number;
-  text: string;
-  timestamp: string;
+  id: string;
+  description: string;
+  date: string;
 }
 
 interface ActivityListProps {
@@ -12,6 +13,7 @@ interface ActivityListProps {
 }
 
 const ActivityList: React.FC<ActivityListProps> = ({ activities }) => {
+  
   return (
     <div className="space-y-4">
       {activities.map((activity) => (
@@ -21,10 +23,10 @@ const ActivityList: React.FC<ActivityListProps> = ({ activities }) => {
         >
           <CheckCircle className="text-green-500" size={24} />
           <div className="flex-1">
-            <p className="font-medium">{activity.text}</p>
+            <p className="font-medium">{activity.description}</p>
             <div className="flex items-center gap-1 text-sm text-gray-500">
               <Clock size={14} />
-              <span>{new Date(activity.timestamp).toLocaleTimeString()}</span>
+              <span>{new Date(activity.date).toLocaleTimeString()}</span>
             </div>
           </div>
         </div>
