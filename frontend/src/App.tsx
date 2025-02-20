@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Calendar, Trophy } from 'lucide-react';
 import HeatMap from './components/HeatMap';
 import StreakCounter from './components/StreakCounter';
 import LongestStreak from './components/LongestStreak';
 import ActivityForm from './components/ActivityForm';
 import ActivityList from './components/ActivityList';
+import axios from 'axios';
 
 // Mock data - replace with real data from backend
 const mockHeatmapData = Array.from({ length: 365 }, (_, i) => ({
@@ -13,19 +14,65 @@ const mockHeatmapData = Array.from({ length: 365 }, (_, i) => ({
 }));
 
 function App() {
-  const [activities, setActivities] = useState<Array<{ id: number; text: string; timestamp: string }>>([]);
+  const [activities, setActivities] = useState<Array<{ id: string; description: string; date: string }>>([]);
+  const [streaks, setStreaks] = useState(0);
   const streak = 7; // Mock streak count - replace with real data
   const longestStreak = 15; // Mock longest streak - replace with real data
+  const BASE_URL = import.meta.env.VITE_LOCAL_API_ACTIVITY_BASE_URL;
 
-  const handleActivitySubmit = (text: string) => {
-    setActivities([
-      {
-        id: Date.now(),
-        text,
-        timestamp: new Date().toISOString()
-      },
-      ...activities
-    ]);
+  // Fetch streaks on component mount
+  useEffect(() => {
+    try {
+      const fetchStreaks = async () => {
+        const response = await axios.get(`${BASE_URL}/streaks`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        setStreaks(response.data.streaks);
+        fetchStreaks();
+      };
+    } catch (error) {
+      console.error('Error fetching streaks:', error);
+    }
+  }, []);
+
+  // fetch activities on component mount
+  useEffect(() => {
+    try {
+      const fetchActivities = async () => {
+      const response = await axios.get(`${BASE_URL}/activities`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      })
+      setActivities(response.data);
+      fetchActivities();
+    };
+    } catch (error) {
+      console.error('Error fetching activities:', error);
+    }
+  }, []);
+
+  const handleActivitySubmit = async (description: string) => {
+    try {
+      const response = await axios.post(`${BASE_URL}/activities`, {
+        date : new Date().toISOString(),
+        description : description,
+      }, {
+        headers : {
+          'Content-Type': "text/plain",
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        }
+      });
+      setActivities([...activities, {
+        id : response.data.id,
+        description : response.data.description,
+        date : response.data.createdAt,
+      }])
+    } catch (error) {
+      console.error('Error submitting activity:', error);   
+    }
   };
 
   return (
@@ -50,7 +97,7 @@ function App() {
               <div className="flex items-center gap-6">
                 <LongestStreak count={longestStreak} />
                 <div className="w-px h-8 bg-gray-200" />
-                <StreakCounter streak={streak} />
+                <StreakCounter streak={streak | streaks} />
               </div>
             </div>
             <HeatMap data={mockHeatmapData} />
