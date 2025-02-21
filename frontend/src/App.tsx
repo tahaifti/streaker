@@ -1,77 +1,78 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Calendar, Trophy } from 'lucide-react';
 import HeatMap from './components/HeatMap';
-import StreakCounter from './components/StreakCounter';
-import LongestStreak from './components/LongestStreak';
-import ActivityForm from './components/ActivityForm';
-import ActivityList from './components/ActivityList';
-import axios from 'axios';
-
-// Mock data - replace with real data from backend
-const mockHeatmapData = Array.from({ length: 365 }, (_, i) => ({
-  date: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-  count: Math.floor(Math.random() * 5)
-}));
+import { StreakCounter, LongestStreak, ActivityForm, ActivityList } from './components';
+import { useAuth } from './utils/auth';
+import { addActivity, fetchActivities, fetchStreaks } from './utils/api';
 
 function App() {
   const [activities, setActivities] = useState<Array<{ id: string; description: string; date: string }>>([]);
-  const [streaks, setStreaks] = useState(0);
-  const streak = 7; // Mock streak count - replace with real data
+  const [streak, setStreak] = useState(0);
   const longestStreak = 15; // Mock longest streak - replace with real data
-  const BASE_URL = import.meta.env.VITE_LOCAL_API_ACTIVITY_BASE_URL;
+  const { authUser } = useAuth();
 
   // Fetch streaks on component mount
   useEffect(() => {
-    try {
-      const fetchStreaks = async () => {
-        const response = await axios.get(`${BASE_URL}/streaks`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
+    if (authUser) {
+      try {
+        fetchStreaks(authUser.token).then((streaks) => {
+          setStreak(streaks);
         });
-        setStreaks(response.data.streaks);
-        fetchStreaks();
-      };
-    } catch (error) {
-      console.error('Error fetching streaks:', error);
+        // console.log(`Streaks: ${streak}`);
+      } catch (error) {
+        console.error('Error fetching streaks:', error);
+      }
+    } else {
+      console.error('User not authenticated - cannot fetch streaks');
     }
-  }, []);
+  }, [authUser]);
 
   // fetch activities on component mount
   useEffect(() => {
-    try {
-      const fetchActivities = async () => {
-      const response = await axios.get(`${BASE_URL}/activities`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      })
-      setActivities(response.data);
-      fetchActivities();
-    };
-    } catch (error) {
-      console.error('Error fetching activities:', error);
+    if (authUser) {
+      try {
+        fetchActivities(authUser.token).then((fetchedActivities) => {
+          setActivities(fetchedActivities || []);
+        });
+      } catch (error) {
+        console.error('Error fetching activities:', error);
+        setActivities([]); // Ensure activities is always an array
+      }
     }
-  }, []);
+  }, [authUser]);
+
+  // Transform activities data for HeatMap
+  const heatmapData = useMemo(() => {
+    // Group activities by date and count them
+    const countsByDate = activities.reduce<{ [key: string]: number }>((acc, activity) => {
+      // Format date to YYYY-MM-DD
+      const date = activity.date.split('T')[0];
+      acc[date] = (acc[date] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Convert to array format that HeatMap expects
+    return Object.keys(countsByDate).map(date => ({
+      date,
+      count: countsByDate[date]
+    }));
+  }, [activities]);
 
   const handleActivitySubmit = async (description: string) => {
-    try {
-      const response = await axios.post(`${BASE_URL}/activities`, {
-        date : new Date().toISOString(),
-        description : description,
-      }, {
-        headers : {
-          'Content-Type': "text/plain",
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        }
-      });
-      setActivities([...activities, {
-        id : response.data.id,
-        description : response.data.description,
-        date : response.data.createdAt,
-      }])
-    } catch (error) {
-      console.error('Error submitting activity:', error);   
+    if (authUser) {
+      try {
+        const response = await addActivity(authUser.token, description);
+        const newActivity = {
+          id: response.data.id,
+          description: response.data.description,
+          date: response.data.createdAt,
+        };
+        setActivities(currentActivities => [...(currentActivities || []), newActivity]);
+      } catch (error) {
+        console.error('Error submitting activity:', error);
+      }
+    } else {
+      console.error('User not authenticated - cannot submit activity');
     }
   };
 
@@ -97,10 +98,10 @@ function App() {
               <div className="flex items-center gap-6">
                 <LongestStreak count={longestStreak} />
                 <div className="w-px h-8 bg-gray-200" />
-                <StreakCounter streak={streak | streaks} />
+                <StreakCounter streak={streak} />
               </div>
             </div>
-            <HeatMap data={mockHeatmapData} />
+            <HeatMap data={heatmapData} />
           </div>
 
           <div className="bg-white p-6 rounded-xl shadow-sm">
