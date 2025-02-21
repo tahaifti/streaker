@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, ReactElement } from 'react';
+import React, { createContext, useContext, useState, ReactElement } from 'react';
 
 interface AuthUser {
     user: string;
@@ -13,11 +13,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-interface AuthProviderProps {
-    children: ReactNode;
-}
 
-export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }): ReactElement => {
     const [authUser, setAuthUser] = useState<AuthUser | null>(getStoredAuth());
 
     const login = (user: string, token: string) => {
@@ -32,7 +29,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
     };
 
     return (
-        <AuthContext.Provider value= {{ authUser, login, logout }}>
+        <AuthContext.Provider value={{ authUser, login, logout }}>
     { children }
     </AuthContext.Provider>
 );
