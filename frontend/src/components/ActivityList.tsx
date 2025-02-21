@@ -13,7 +13,9 @@ interface ActivityListProps {
 }
 
 const ActivityList: React.FC<ActivityListProps> = ({ activities }) => {
-  
+  if (!activities || activities.length === 0) {
+    return <div className=''>No activities found</div>;
+  }
   return (
     <div className="space-y-4">
       {activities.map((activity) => (
