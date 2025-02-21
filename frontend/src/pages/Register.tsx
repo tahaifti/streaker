@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserPlus } from 'lucide-react';
 import { registerUser } from '../utils/api';
-import { useAuth } from '../utils/auth';
+
 
 interface RegisterFormData {
     name: string;
@@ -21,7 +21,6 @@ const Register: React.FC = () => {
         confirmPassword: '',
     });
 
-    const { login } = useAuth();
     const navigate = useNavigate();
  
     const [error, setError] = useState<string>('');
@@ -41,11 +40,12 @@ const Register: React.FC = () => {
         }
         try {
             const result = await registerUser(formData);
-            if(result?.token){
-                login(result.user, result.token);
-                navigate('/home');
+            console.log(result);
+            
+            if(result){
+                navigate('/login');
             }else {
-                setError(result?.message || 'An error occurred');
+                setError(`Error while Registration - ${result?.message}` || 'An error occurred');
             }
         } catch (error : any) {
             console.error('An error occurred:', error);
