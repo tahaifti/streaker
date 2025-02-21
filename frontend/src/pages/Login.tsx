@@ -40,7 +40,7 @@ const Login: React.FC = () => {
             console.error('A Login error occurred:', error);
             setError(`An error occurred ${error.message}` || 'Login failed');
         }
-        console.log('Login attempt:', formData);
+        // console.log('Login attempt:', formData);
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
