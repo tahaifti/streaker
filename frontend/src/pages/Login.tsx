@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
 import { loginUser } from '../utils/api';
@@ -28,7 +28,9 @@ const Login: React.FC = () => {
         }
         try {
             const result = await loginUser(formData);
+            // console.log(result.token);
             if (result?.token) {
+                // console.log("going to call login function");
                 login(result.user, result.token);
                 navigate('/home');
             }else {
