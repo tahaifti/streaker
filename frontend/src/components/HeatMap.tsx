@@ -4,9 +4,9 @@ interface HeatMapProps {
   data: { date: string; count: number }[];
 }
 
-const HeatMap: React.FC<HeatMapProps> = ({ data }) => {
+const HeatMap: React.FC<HeatMapProps> = ({ data = [] }) => {
   const getColor = (count: number) => {
-    if (count === 0) return 'bg-gray-100';
+    if (count === 0) return 'bg-gray-400';
     if (count < 3) return 'bg-green-200';
     if (count < 5) return 'bg-green-400';
     return 'bg-green-600';
@@ -16,16 +16,17 @@ const HeatMap: React.FC<HeatMapProps> = ({ data }) => {
   const days = Array.from({ length: 365 }, (_, i) => {
     const date = new Date();
     date.setDate(date.getDate() - i);
-    const found = data.find(d => d.date === date.toISOString().split('T')[0]);
+    const formattedDate = date.toISOString().split('T')[0];
+    const found = data.find(d => d.date === formattedDate);
     return {
-      date: date.toISOString().split('T')[0],
+      date: formattedDate,
       count: found ? found.count : 0
     };
   }).reverse();
 
   return (
     <div className="grid grid-cols-[repeat(53,1fr)] gap-1">
-      {days.map((day, i) => (
+      {days.map((day) => (
         <div
           key={day.date}
           className={`w-3 h-3 rounded-sm ${getColor(day.count)}`}
