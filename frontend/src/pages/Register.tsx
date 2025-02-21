@@ -40,7 +40,7 @@ const Register: React.FC = () => {
         }
         try {
             const result = await registerUser(formData);
-            console.log(result);
+            // console.log(result);
             
             if(result){
                 navigate('/login');
@@ -51,7 +51,7 @@ const Register: React.FC = () => {
             console.error('An error occurred:', error);
             setError((`An error occurred ${error.message}` )|| "Registration failed");
         }
-        console.log('Registration attempt:', formData);
+        // console.log('Registration attempt:', formData);
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
