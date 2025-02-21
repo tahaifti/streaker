@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { UserPlus } from 'lucide-react';
 import { registerUser } from '../utils/api';
 import { useAuth } from '../utils/auth';
@@ -22,6 +22,7 @@ const Register: React.FC = () => {
     });
 
     const { login } = useAuth();
+    const navigate = useNavigate();
  
     const [error, setError] = useState<string>('');
 
@@ -42,12 +43,14 @@ const Register: React.FC = () => {
             const result = await registerUser(formData);
             if(result?.token){
                 login(result.user, result.token);
+                navigate('/home');
+            }else {
+                setError(result?.message || 'An error occurred');
             }
-        } catch (error) {
-            
+        } catch (error : any) {
+            console.error('An error occurred:', error);
+            setError((`An error occurred ${error.message}` )|| "Registration failed");
         }
-
-        // TODO: Implement registration logic
         console.log('Registration attempt:', formData);
     };
 
