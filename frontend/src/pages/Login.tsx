@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
+import { loginUser } from '../utils/api';
+import { useAuth } from '../utils/auth';
 
 interface LoginFormData {
     email: string;
@@ -12,10 +14,30 @@ const Login: React.FC = () => {
         email: '',
         password: '',
     });
+    const [error, setError] = useState('');
+    const { login } = useAuth();
+    const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // TODO: Implement login logic
+        
+        setError('');
+        if (formData.email === '' || formData.password === '') {
+            setError('Please fill in all fields');
+            return;
+        }
+        try {
+            const result = await loginUser(formData);
+            if (result?.token) {
+                login(result.user, result.token);
+                navigate('/home');
+            }else {
+                setError(result?.message || 'Login failed');
+            }
+        } catch (error : any) {
+            console.error('A Login error occurred:', error);
+            setError(`An error occurred ${error.message}` || 'Login failed');
+        }
         console.log('Login attempt:', formData);
     };
 
@@ -33,6 +55,7 @@ const Login: React.FC = () => {
                 <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
                     Sign in to your account
                 </h2>
+                {error && <div className="text-red-600 text-center">{error}</div>}
                 <p className="mt-2 text-center text-sm text-gray-600">
                     Or{' '}
                     <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">
