@@ -45,6 +45,16 @@ const fetchStreaks = async (token: string) => {
     return response.data.streak;
 };
 
+const fetchLongestStreak = async (token: string) => {
+    const response = await api.get('/longest-streak', {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    // console.log(`Longest streak: ${response.data.streak}`);
+    return response.data.streak;
+}
+
 const fetchActivities = async (token: string) => {
     const response = await api.get('/activities', {
         headers: {
@@ -54,8 +64,23 @@ const fetchActivities = async (token: string) => {
     return response.data.activities;
 };
 
+const fetchAllActivities = async (token : string) => {
+    try {
+        const response = await api.get('/all', {
+            headers : {
+                Authorization : `Bearer ${token}`
+            }
+        });
+        // console.log(response.data)
+        return response.data;
+    } catch (error : any) {
+        console.error(`Error in fetching all activities: ${error}`);
+        throw new Error(error.response?.data?.message || "Error in fetching all activities");
+    }
+}
+
 const addActivity = async (token: string, description: string) => {
-    console.log(`Adding activity: ${description}`);
+    // console.log(`Adding activity: ${description}`);
     const response = await api.post('/activities', {
         date: new Date().toISOString(),
         description: description,
@@ -65,8 +90,8 @@ const addActivity = async (token: string, description: string) => {
             'Authorization': `Bearer ${token}`,
         }
     });
-    console.log(`Activity added:`, response.data);
+    // console.log(`Activity added:`, response.data);
     return response;
 }
 
-export { registerUser, loginUser, fetchStreaks, fetchActivities, addActivity };
+export { registerUser, loginUser, fetchStreaks, fetchLongestStreak, fetchActivities, fetchAllActivities, addActivity };
