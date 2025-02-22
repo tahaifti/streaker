@@ -1,10 +1,19 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Flame, Target, Award, TrendingUp, CheckCircle } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { useAuth } from '../utils/auth';
 
 const Landing: React.FC = () => {
+
+    const {authUser} = useAuth();
+    const navigate = useNavigate();
+    useEffect(() => {
+        if(authUser){
+            navigate('/home');
+        }
+    }, [authUser, navigate]);
     return (
         <div className="min-h-screen bg-gray-50">
             <Header />
