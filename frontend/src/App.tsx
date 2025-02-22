@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Calendar, Trophy } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import HeatMap from './components/HeatMap';
 import { StreakCounter, LongestStreak, ActivityForm, ActivityList } from './components';
 import { useAuth } from './utils/auth';
@@ -9,9 +9,14 @@ import Footer from './components/Footer';
 
 function App() {
   const [activities, setActivities] = useState<Array<{ id: string; description: string; date: string, createdAt?: string }>>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
   const [streak, setStreak] = useState(0);
-  const [longestStreak, setLongestStreak] = useState(0); // Mock longest streak - replace with real data 
+  const [longestStreak, setLongestStreak] = useState(0);
   const { authUser } = useAuth();
+
+  const activitiesPerPage = 3;
 
   // Fetch streaks on component mount
   useEffect(() => {
@@ -48,29 +53,49 @@ function App() {
   // fetch activities on component mount
   useEffect(() => {
     if (authUser) {
-      try {
-        fetchAllActivities(authUser.token).then((fetchedActivities) => {
-          setActivities(fetchedActivities || []);
-          // console.log(fetchedActivities)
-          localStorage.setItem('userActivities', JSON.stringify(fetchedActivities));
-        });
-      } catch (error) {
-        console.error('Error fetching activities:', error);
-        const cachedActivities = localStorage.getItem('userActivities');
-        if (cachedActivities) {
-          setActivities(JSON.parse(cachedActivities));
-        }else {
-          console.error('No cached activities found');
-          setActivities([]); // Ensure activities is always an array
+      const fetchedActivities = async () => {
+        try {
+          const data = await fetchAllActivities(authUser.token, currentPage, activitiesPerPage);
+          console.log(data);
+          setActivities(data.activities);
+          setTotalPages(data.totalPages);
+          setLoading(false);
+          // console.log(data);
+          localStorage.setItem('userActivities', JSON.stringify(data.activities));
+        } catch (error) {
+          console.error('Error fetching activities:', error);
+          const cachedActivities = localStorage.getItem('userActivities');
+          if (cachedActivities) {
+            setActivities(JSON.parse(cachedActivities));
+          } else {
+            console.error('No cached activities found');
+            setActivities([]); // Ensure activities is always an array
+          }
         }
       }
+      fetchedActivities();
     } else {
       const cachedActivities = localStorage.getItem('userActivities');
       if (cachedActivities) {
         setActivities(JSON.parse(cachedActivities));
       }
     }
-  }, [authUser]);
+  }, [authUser, currentPage]);
+
+  // Handle page navigation
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+
 
   // Transform activities data for HeatMap
   const heatmapData = useMemo(() => {
@@ -80,13 +105,13 @@ function App() {
       const activityDate = activity.date || activity.createdAt;
       const date = typeof activityDate === 'string'
         ? activityDate.split('T')[0]  // ISO string format
-        : activityDate 
-          ? new Date(activityDate).toISOString().split('T')[0] 
+        : activityDate
+          ? new Date(activityDate).toISOString().split('T')[0]
           : new Date().toISOString().split('T')[0]; // Default to current date
 
       // Count the length of the description array instead of incrementing by 1
-      const activityCount = Array.isArray(activity.description) 
-        ? activity.description.length 
+      const activityCount = Array.isArray(activity.description)
+        ? activity.description.length
         : 1; // Fallback to 1 if description is not an array
 
       acc[date] = (acc[date] || 0) + activityCount;
@@ -123,9 +148,14 @@ function App() {
     }
   };
 
+  // if (loading) {
+  //   return <div>Loading...</div>;
+  // }
+
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header/>
+      <Header />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid gap-8">
@@ -150,10 +180,30 @@ function App() {
             <div className="mt-6">
               <ActivityList activities={activities} />
             </div>
+            {/* Pagination Controls */}
+            <div className="flex justify-between mt-6">
+              <button
+                onClick={handlePreviousPage}
+                disabled={currentPage === 1}
+                className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <span className="text-gray-600">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
           </div>
         </div>
       </main>
-      <Footer/>
+      <Footer />
     </div>
   );
 }
