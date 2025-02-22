@@ -24,6 +24,7 @@ activityRouter.get('/activities', (c) => {
     return activityController.getActivities(c)
 });
 
+// GET api/activity/all - Get all activities
 activityRouter.get('/all', (c) => {
     const prisma = new PrismaClient({
         datasourceUrl: c.env?.DATABASE_URL
