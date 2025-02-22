@@ -31,7 +31,9 @@ export class ActivityController {
     // method to get all activities
     async getAllActivities(c: Context) {
         const { id: userId } = c.get('jwtPayload');
-        const activities = await this.activityService.getAllActivities(userId);
+        const page = parseInt(c.req.query('page') || '1');
+        const limit = parseInt(c.req.query('limit') || '5');
+        const activities = await this.activityService.getAllActivities(userId, page, limit);
         return c.json(activities);
     }
 
