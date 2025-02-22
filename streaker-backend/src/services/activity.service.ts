@@ -53,17 +53,31 @@ export class ActivityService {
         }
     }
 
-    async getAllActivities(userId: string) {
+    async getAllActivities(userId: string, page: number, limit: number) {
         try {
+            const skip = (page - 1) * limit;
             const activities =  await this.db.activity.findMany({
                 where: {
                     userId,
                 },
                 orderBy : {
                     createdAt : 'desc',
-                }
+                },
+                skip,
+                take: limit,
             });
-            return activities;
+
+            const totalActivities = await this.db.activity.count({
+                where: {
+                    userId,
+                },
+            });
+            return {
+                activities,
+                totalActivities,
+                totalPages: Math.ceil(totalActivities / limit),
+                currentPage: page,
+            };
         } catch (error : any) {
             throw new HTTPException(500, { message: `Failed to get all activities: ${error.message}` });
         }
