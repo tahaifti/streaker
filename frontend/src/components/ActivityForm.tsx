@@ -11,9 +11,9 @@ const ActivityForm: React.FC<ActivityFormProps> = ({ onSubmit }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (activity.trim()) {
-      console.log('Activity submitting:', activity);
+      // console.log('Activity submitting:', activity);
       onSubmit(activity);
-      console.log('Activity submitted:', activity);
+      // console.log('Activity submitted:', activity);
       setActivity('');
     }
   };
