@@ -85,7 +85,7 @@ const Footer: React.FC = () => {
                             <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
                                 <div className="bg-white p-6 rounded-lg shadow-lg">
                                     <img
-                                        src="../src/public/assests/upi-qr.jpg" // Path to your QR code image
+                                        src="../../public/assests/upi-qr.jpg" // Path to your QR code image
                                         alt="Scan to Pay via UPI"
                                         className="w-64 rounded-lg"
                                     />
