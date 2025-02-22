@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserPlus } from 'lucide-react';
 import { registerUser } from '../utils/api';
+import { useAuth } from '../utils/auth';
 
 
 interface RegisterFormData {
@@ -22,6 +23,13 @@ const Register: React.FC = () => {
     });
 
     const navigate = useNavigate();
+    const { authUser } = useAuth();
+
+    useEffect(() => {
+            if (authUser) {
+                navigate('/home');
+            }
+        }, [authUser, navigate]);
  
     const [error, setError] = useState<string>('');
 
