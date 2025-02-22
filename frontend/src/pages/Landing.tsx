@@ -47,7 +47,7 @@ const Landing: React.FC = () => {
                 </div>
 
                 {/* Background Pattern */}
-                <div className="absolute inset-y-0 right-0 w-1/2 bg-gray-50 opacity-50" />
+                {/* <div className="absolute inset-y-0 right-0 w-1/2 bg-gray-50 opacity-50" /> */}
             </section>
 
             {/* Features Section */}
