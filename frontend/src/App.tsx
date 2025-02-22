@@ -56,7 +56,7 @@ function App() {
       const fetchedActivities = async () => {
         try {
           const data = await fetchAllActivities(authUser.token, currentPage, activitiesPerPage);
-          console.log(data);
+          // console.log(data);
           setActivities(data.activities);
           setTotalPages(data.totalPages);
           setLoading(false);
