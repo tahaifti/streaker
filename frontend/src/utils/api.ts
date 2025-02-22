@@ -64,11 +64,15 @@ const fetchActivities = async (token: string) => {
     return response.data.activities;
 };
 
-const fetchAllActivities = async (token : string) => {
+const fetchAllActivities = async (token : string, page : number, limit : number) => {
     try {
         const response = await api.get('/all', {
             headers : {
                 Authorization : `Bearer ${token}`
+            }, 
+            params : {
+                page : page,
+                limit : limit
             }
         });
         // console.log(response.data)
