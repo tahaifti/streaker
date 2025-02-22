@@ -24,6 +24,15 @@ activityRouter.get('/activities', (c) => {
     return activityController.getActivities(c)
 });
 
+activityRouter.get('/all', (c) => {
+    const prisma = new PrismaClient({
+        datasourceUrl: c.env?.DATABASE_URL
+    }).$extends(withAccelerate());
+    const activityService = new ActivityService(prisma);
+    const activityController = new ActivityController(activityService);
+    return activityController.getAllActivities(c)
+})
+
 // POST api/activity/activities - Save an activity
 activityRouter.post('/activities', (c) => {
     const prisma = new PrismaClient({
@@ -42,4 +51,14 @@ activityRouter.get('/streak', (c) => {
     const activityService = new ActivityService(prisma);
     const activityController = new ActivityController(activityService);
     return activityController.getStreak(c)
+});
+
+// GET api/activity/longest-streak - Get the longest streak
+activityRouter.get('/longest-streak', (c) => {
+    const prisma = new PrismaClient({
+        datasourceUrl: c.env?.DATABASE_URL
+    }).$extends(withAccelerate());
+    const activityService = new ActivityService(prisma);
+    const activityController = new ActivityController(activityService);
+    return activityController.getLongestStreak(c)
 });
