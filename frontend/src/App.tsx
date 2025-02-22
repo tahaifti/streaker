@@ -3,12 +3,14 @@ import { Calendar, Trophy } from 'lucide-react';
 import HeatMap from './components/HeatMap';
 import { StreakCounter, LongestStreak, ActivityForm, ActivityList } from './components';
 import { useAuth } from './utils/auth';
-import { addActivity, fetchActivities, fetchStreaks } from './utils/api';
+import { addActivity, fetchAllActivities, fetchLongestStreak, fetchStreaks } from './utils/api';
+import Header from './components/Header';
+import Footer from './components/Footer';
 
 function App() {
-  const [activities, setActivities] = useState<Array<{ id: string; description: string; date: string }>>([]);
+  const [activities, setActivities] = useState<Array<{ id: string; description: string; date: string, createdAt?: string }>>([]);
   const [streak, setStreak] = useState(0);
-  const longestStreak = 15; // Mock longest streak - replace with real data
+  const [longestStreak, setLongestStreak] = useState(0); // Mock longest streak - replace with real data 
   const { authUser } = useAuth();
 
   // Fetch streaks on component mount
@@ -27,31 +29,70 @@ function App() {
     }
   }, [authUser]);
 
+  // Fetch longest streak on component mount
+  useEffect(() => {
+    if (authUser) {
+      try {
+        fetchLongestStreak(authUser.token).then((streaks) => {
+          setLongestStreak(streaks);
+        });
+        // console.log(`Longest streak: ${longestStreak}`);
+      } catch (error) {
+        console.error('Error fetching longest streak:', error);
+      }
+    } else {
+      console.error('User not authenticated - cannot fetch longest streak');
+    }
+  }, [authUser]);
+
   // fetch activities on component mount
   useEffect(() => {
     if (authUser) {
       try {
-        fetchActivities(authUser.token).then((fetchedActivities) => {
+        fetchAllActivities(authUser.token).then((fetchedActivities) => {
           setActivities(fetchedActivities || []);
+          // console.log(fetchedActivities)
+          localStorage.setItem('userActivities', JSON.stringify(fetchedActivities));
         });
       } catch (error) {
         console.error('Error fetching activities:', error);
-        setActivities([]); // Ensure activities is always an array
+        const cachedActivities = localStorage.getItem('userActivities');
+        if (cachedActivities) {
+          setActivities(JSON.parse(cachedActivities));
+        }else {
+          console.error('No cached activities found');
+          setActivities([]); // Ensure activities is always an array
+        }
+      }
+    } else {
+      const cachedActivities = localStorage.getItem('userActivities');
+      if (cachedActivities) {
+        setActivities(JSON.parse(cachedActivities));
       }
     }
   }, [authUser]);
 
   // Transform activities data for HeatMap
   const heatmapData = useMemo(() => {
-    // Group activities by date and count them
-    const countsByDate = activities.reduce<{ [key: string]: number }>((acc, activity) => {
-      // Format date to YYYY-MM-DD
-      const date = activity.date.split('T')[0];
-      acc[date] = (acc[date] || 0) + 1;
+    // Group activities by date and sum the length of description arrays
+    const countsByDate = activities.reduce<Record<string, number>>((acc, activity) => {
+      // Handle different date formats safely
+      const activityDate = activity.date || activity.createdAt;
+      const date = typeof activityDate === 'string'
+        ? activityDate.split('T')[0]  // ISO string format
+        : activityDate 
+          ? new Date(activityDate).toISOString().split('T')[0] 
+          : new Date().toISOString().split('T')[0]; // Default to current date
+
+      // Count the length of the description array instead of incrementing by 1
+      const activityCount = Array.isArray(activity.description) 
+        ? activity.description.length 
+        : 1; // Fallback to 1 if description is not an array
+
+      acc[date] = (acc[date] || 0) + activityCount;
       return acc;
     }, {});
 
-    // Convert to array format that HeatMap expects
     return Object.keys(countsByDate).map(date => ({
       date,
       count: countsByDate[date]
@@ -67,7 +108,13 @@ function App() {
           description: response.data.description,
           date: response.data.createdAt,
         };
-        setActivities(currentActivities => [...(currentActivities || []), newActivity]);
+        const updatedActivities = [...(activities || []), newActivity];
+        setActivities(updatedActivities);
+        localStorage.setItem('userActivities', JSON.stringify(updatedActivities));
+
+        fetchStreaks(authUser.token).then((streaks) => {
+          setStreak(streaks);
+        });
       } catch (error) {
         console.error('Error submitting activity:', error);
       }
@@ -78,14 +125,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center gap-2">
-            <Trophy className="text-yellow-500" size={32} />
-            <h1 className="text-3xl font-bold text-gray-900">Streak Tracker</h1>
-          </div>
-        </div>
-      </header>
+      <Header/>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid gap-8">
@@ -113,6 +153,7 @@ function App() {
           </div>
         </div>
       </main>
+      <Footer/>
     </div>
   );
 }
