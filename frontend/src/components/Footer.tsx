@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Github, Twitter, Linkedin, Coffee, Mail } from 'lucide-react';
 
 const Footer: React.FC = () => {
+    const [showQR, setShowQR] = useState(false);
     return (
         <footer className="bg-slate-200 border-t">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -57,7 +58,7 @@ const Footer: React.FC = () => {
                         <p className="text-gray-600 mb-4">
                             If you find Streak Tracker helpful, consider supporting its development!
                         </p>
-                        <a
+                        {/* <a
                             href="https://buymeacoffee.com/dexter_ifti"
                             target="_blank"
                             rel="noopener noreferrer"
@@ -65,7 +66,38 @@ const Footer: React.FC = () => {
                         >
                             <Coffee className="h-5 w-5" />
                             <span>Buy me a coffee</span>
-                        </a>
+                        </a> */}
+                        <div className="flex justify-center items-center gap-4">
+                            <div className="group relative">
+                                <button
+                                    onClick={() => setShowQR(true)}
+                                    className="hover:opacity-80 transition-opacity"
+                                >
+                                    Support Me
+                                </button>
+                                {/* Tooltip */}
+                                <p className="absolute bottom-full mb-2 hidden group-hover:block bg-black text-white text-sm px-2 py-1 rounded-lg">
+                                    Click Here to get UPI QR Code
+                                </p>
+                            </div>
+                        </div>
+                        {showQR && (
+                            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                                <div className="bg-white p-6 rounded-lg shadow-lg">
+                                    <img
+                                        src="../src/public/assests/upi-qr.jpg" // Path to your QR code image
+                                        alt="Scan to Pay via UPI"
+                                        className="w-64 rounded-lg"
+                                    />
+                                    <button
+                                        onClick={() => setShowQR(false)}
+                                        className="mt-4 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700"
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -73,7 +105,7 @@ const Footer: React.FC = () => {
                     <p className="text-gray-500">
                         Created with ❤️ by{' '}
                         <a
-                            href="https://github.com/dexter_ifti"
+                            href="https://github.com/dexter-ifti"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:text-blue-700"
