@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
 import { loginUser } from '../utils/api';
@@ -10,13 +10,23 @@ interface LoginFormData {
 }
 
 const Login: React.FC = () => {
+    const { login, authUser  } = useAuth();
+    const navigate = useNavigate();
+
+    // Redirect if user is already logged in
+    useEffect(() => {
+        if (authUser) {
+            navigate('/home');
+        }
+    }, [authUser, navigate]);
+
     const [formData, setFormData] = useState<LoginFormData>({
         email: '',
         password: '',
     });
     const [error, setError] = useState('');
-    const { login } = useAuth();
-    const navigate = useNavigate();
+    // const { login } = useAuth();
+    // const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
