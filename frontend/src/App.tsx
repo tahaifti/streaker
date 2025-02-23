@@ -133,11 +133,10 @@ function App() {
           description: response.data.description,
           date: response.data.createdAt,
         };
-
-        setAllActivities(prev => [newActivity, ...prev]);
-        setActivities(prev => [newActivity, ...prev]);
-        localStorage.setItem('userActivities', JSON.stringify([newActivity, ...allActivities]));
-
+        const updatedActivities = [...(allActivities || []), newActivity];
+        setAllActivities(updatedActivities);
+        setActivities(updatedActivities.slice((currentPage - 1) * activitiesPerPage, currentPage * activitiesPerPage));
+        localStorage.setItem('userActivities', JSON.stringify(updatedActivities));
         fetchStreaks(authUser.token).then((streaks) => {
           setStreak(streaks);
         });
