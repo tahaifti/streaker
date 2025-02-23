@@ -151,58 +151,72 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      {authUser?.user.name && (
-        <div className="bg-white p-4 sm:p-6 mt-4 rounded-xl shadow-sm text-xl font-semibold text-gray-800">
-          Welcome back, {authUser.user.name}! 👋
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="flex items-center space-x-2">
+            <svg className="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span className="text-lg text-gray-700">Loading your data...</span>
+          </div>
         </div>
-      )}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <div className="grid gap-6 sm:gap-8">
-          <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-4 sm:gap-0">
-              <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
-                <Calendar size={20} />
-                Activity History
-              </h2>
-              <div className="flex items-center gap-4 sm:gap-6 w-full sm:w-auto justify-between sm:justify-end">
-                <LongestStreak count={longestStreak} />
-                <div className="hidden sm:block w-px h-8 bg-gray-200" />
-                <StreakCounter streak={streak} />
+      ) : (
+        <>
+          {authUser?.user.name && (
+            <div className="bg-white p-4 sm:p-6 mt-4 rounded-xl shadow-sm text-xl font-semibold text-gray-800">
+              Welcome back, {authUser.user.name}! 👋
+            </div>
+          )}
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+            <div className="grid gap-6 sm:gap-8">
+              <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-4 sm:gap-0">
+                  <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+                    <Calendar size={20} />
+                    Activity History
+                  </h2>
+                  <div className="flex items-center gap-4 sm:gap-6 w-full sm:w-auto justify-between sm:justify-end">
+                    <LongestStreak count={longestStreak} />
+                    <div className="hidden sm:block w-px h-8 bg-gray-200" />
+                    <StreakCounter streak={streak} />
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <HeatMap data={heatmapData} />
+                </div>
+              </div>
+
+              <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm">
+                <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6">Activities</h2>
+                <ActivityForm onSubmit={handleActivitySubmit} />
+                <div className="mt-4 sm:mt-6">
+                  <ActivityList activities={activities} />
+                </div>
+                <div className="flex justify-between mt-6">
+                  <button
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-gray-600">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50"
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
             </div>
-            <div className="overflow-x-auto">
-              <HeatMap data={heatmapData} />
-            </div>
-          </div>
-
-          <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm">
-            <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6">Activities</h2>
-            <ActivityForm onSubmit={handleActivitySubmit} />
-            <div className="mt-4 sm:mt-6">
-              <ActivityList activities={activities} />
-            </div>
-            <div className="flex justify-between mt-6">
-              <button
-                onClick={handlePreviousPage}
-                disabled={currentPage === 1}
-                className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50"
-              >
-                Previous
-              </button>
-              <span className="text-gray-600">
-                Page {currentPage} of {totalPages}
-              </span>
-              <button
-                onClick={handleNextPage}
-                disabled={currentPage === totalPages}
-                className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        </div>
-      </main>
+          </main>
+        </>
+      )}
       <Footer />
     </div>
   );
