@@ -35,3 +35,6 @@ lerna-debug.log*
 # configuration files
 wrangler.toml
 wrangler.json
+
+# dummy data 
+seed.js
