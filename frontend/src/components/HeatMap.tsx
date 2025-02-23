@@ -9,7 +9,7 @@ const HeatMap: React.FC<HeatMapProps> = ({ data = [] }) => {
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 1024) { // lg breakpoint
+      if (window.innerWidth < 768) { // md breakpoint for mobile
         setDaysToShow(150);
       } else {
         setDaysToShow(365);
