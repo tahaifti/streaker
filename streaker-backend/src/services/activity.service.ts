@@ -4,31 +4,44 @@ import { HTTPException } from "hono/http-exception";
 export class ActivityService {
     constructor(private db : PrismaClient | any) { }
 
-    async saveActivity(date: Date, description: string, userId: string){
+    async saveActivity(date: Date, description: string, userId: string) {
         try {
             // console.log(`userId: ${userId}, date: ${date}, description: ${description}`);
             const activityDate = new Date(date);
-            activityDate.setHours(0, 0, 0, 0);
-            return await this.db.activity.upsert({
+            activityDate.setUTCHours(0, 0, 0, 0);
+
+            const activity =  await this.db.activity.upsert({
                 where: {
-                    userId_date: {
+                    userId_date: {  // Using the compound unique constraint
                         userId,
                         date: activityDate,
-                    },
+                    }
                 },
                 update: {
-                    descriptions: {
-                        push: description, // Append the new description to the array
+                    description: {
+                        push: description,
                     },
                 },
                 create: {
                     userId,
                     date: activityDate,
-                    descriptions: [description], // Create a new array with the description
+                    description: [description],
                 },
             });
-        } catch (error : any) {
-            throw new HTTPException(500, { message : `Failed to save activity ${error.message}` });
+            // Update streaks after saving activity
+            const current_streak = await this.getCurrentStreak(userId);
+            const longest_streak = await this.getLongestStreak(userId);
+
+            await this.db.user.update({
+                where: { id: userId },
+                data: {
+                    current_streak,
+                    longest_streak: Math.max(current_streak, longest_streak),
+                }
+            });
+            return activity;
+        } catch (error: any) {
+            throw new HTTPException(500, { message: `Failed to save activity: ${error.message}` });
         }
     }
 
@@ -55,6 +68,24 @@ export class ActivityService {
 
     async getAllActivities(userId: string, page: number, limit: number) {
         try {
+            // If limit is 0, fetch all activities without pagination
+            if (limit === 0) {
+                const activities = await this.db.activity.findMany({
+                    where: {
+                        userId,
+                    },
+                    orderBy: {
+                        createdAt: 'desc',
+                    },
+                });
+
+                return {
+                    activities,
+                    totalActivities: activities.length,
+                    totalPages: 1,
+                    currentPage: 1,
+                };
+            }
             const skip = (page - 1) * limit;
             const activities =  await this.db.activity.findMany({
                 where: {
@@ -88,48 +119,57 @@ export class ActivityService {
             const activities = await this.db.activity.findMany({
                 where: {
                     userId,
-                    date: {
-                        lte: new Date(), // Only consider activities on or before today
-                    },
                 },
                 orderBy: {
-                    date: 'desc', // Sort by date in descending order
+                    date: 'desc',
                 },
             });
-            // console.log(activities);
+
             let streak = 0;
             const today = new Date();
-            today.setHours(0, 0, 0, 0); // Normalize today's date to midnight
+            today.setUTCHours(0, 0, 0, 0);
 
-            for (let i = 0; i < activities.length; i++) {
-                const activityDate = new Date(activities[i].date);
-                activityDate.setHours(0, 0, 0, 0); // Normalize activity date to midnight
+            // Check if there's any activity today
+            const hasActivityToday: boolean = activities.some((activity: { date: Date | string }) => {
+                const activityDate: Date = new Date(activity.date);
+                return activityDate.getTime() === today.getTime();
+            });
 
-                if (i === 0) {
-                    // Check if the most recent activity is today or yesterday
-                    const diffTime = today.getTime() - activityDate.getTime();
-                    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+            if (activities.length === 0 || (!hasActivityToday &&
+                new Date(activities[0].date).getTime() < today.getTime() - 24 * 60 * 60 * 1000)) {
+                // Reset streak if no activity today and last activity was before yesterday
+                await this.db.user.update({
+                    where: { id: userId },
+                    data: { current_streak: 0 }
+                });
+                return 0;
+            }
 
-                    if (diffDays > 1) {
-                        // If the most recent activity is more than 1 day ago, no streak
-                        break;
-                    }
+            for (let i = 0; i < activities.length - 1; i++) {
+                const currentDate = new Date(activities[i].date);
+                const nextDate = new Date(activities[i + 1].date);
+
+                const diffDays = (currentDate.getTime() - nextDate.getTime()) / (1000 * 60 * 60 * 24);
+
+                if (i === 0) streak++;
+
+                if (diffDays === 1) {
+                    streak++;
                 } else {
-                    // Check if the current activity is exactly 1 day before the previous activity
-                    const prevDate = new Date(activities[i - 1].date);
-                    prevDate.setHours(0, 0, 0, 0); // Normalize previous activity date to midnight
+                    break;
+                }
+            }
 
-                    const diffTime = prevDate.getTime() - activityDate.getTime();
-                    const diffDays = diffTime / (1000 * 60 * 60 * 24);
-
-                    if (diffDays !== 1) {
-                        // If the gap between activities is not exactly 1 day, break the streak
-                        break;
+            // Update current streak in database
+            await this.db.user.update({
+                where: { id: userId },
+                data: {
+                    current_streak: streak,
+                    longest_streak: {
+                        increment: streak > (await this.getLongestStreak(userId)) ? streak : 0
                     }
                 }
-
-                streak++; // Increment the streak
-            }
+            });
 
             return streak;
         } catch (error: any) {
@@ -149,7 +189,7 @@ export class ActivityService {
             });
 
             let longestStreak = 0;
-            let currentStreak = 0;
+            let current_streak = 0;
             let previousDate: Date | null = null;
 
             for (const activity of activities) {
@@ -158,23 +198,23 @@ export class ActivityService {
 
                 if (previousDate === null) {
                     // First activity, start the streak
-                    currentStreak = 1;
+                    current_streak = 1;
                 } else {
                     const diffTime = currentDate.getTime() - previousDate.getTime();
                     const diffDays = diffTime / (1000 * 60 * 60 * 24);
 
                     if (diffDays === 1) {
                         // Consecutive day, increment the streak
-                        currentStreak++;
+                        current_streak++;
                     } else if (diffDays > 1) {
                         // Gap of more than 1 day, reset the streak
-                        currentStreak = 1;
+                        current_streak = 1;
                     }
                 }
 
                 // Update the longest streak if the current streak is longer
-                if (currentStreak > longestStreak) {
-                    longestStreak = currentStreak;
+                if (current_streak > longestStreak) {
+                    longestStreak = current_streak;
                 }
 
                 // Update the previous date
