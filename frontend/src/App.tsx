@@ -172,7 +172,7 @@ function App() {
       ) : (
         <>
           {authUser?.user.name && (
-            <div className="bg-green-500 p-4 sm:p-6 sm:ml-6 sm:w-96 mt-4 ml-4 rounded-xl shadow-sm text-xl font-semibold text-gray-800">
+              <div className="bg-green-500 p-4 w-96 mt-4 ml-4 rounded-xl shadow-sm text-xl font-semibold text-gray-800 sm:p-6 sm:ml-6 sm:w-96">
               Welcome back, {authUser.user.name}! 👋
             </div>
           )}
