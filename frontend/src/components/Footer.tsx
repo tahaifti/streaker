@@ -4,7 +4,7 @@ import { Github, Twitter, Linkedin, Coffee, Mail } from 'lucide-react';
 const Footer = () => {
     const [showQR, setShowQR] = useState(false);
     return (
-        <footer className="bg-slate-200 border-t">
+        <footer className="bg-slate-200 border-t mr-4 ml-6 mb-4 rounded-lg shadow-sm sm:mr-6 sm:ml-8 sm:mb-6">
             <div className="container mx-auto px-4 py-8 sm:py-12">
                 {/* Main content grid - responsive columns */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -81,7 +81,7 @@ const Footer = () => {
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
                         <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg max-w-xs w-full">
                             <img
-                                src="../../public/assests/upi-qr.jpg"
+                                src="/images/upi-qr.jpg"
                                 alt="Scan to Pay via UPI"
                                 className="w-full rounded-lg"
                             />
