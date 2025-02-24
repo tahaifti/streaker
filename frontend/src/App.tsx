@@ -60,6 +60,9 @@ function App() {
             date: new Date(activity.date || activity.createdAt).toISOString().split('T')[0]
           }));
           setAllActivities(processedActivities);
+          localStorage.setItem(
+            `userActivities_${authUser.user.id}`, 
+            JSON.stringify(processedActivities));
           
           const data = await fetchAllActivities(authUser.token, currentPage, activitiesPerPage);
           const processedPaginatedActivities = data.activities.map(activity => ({
@@ -69,28 +72,23 @@ function App() {
           setActivities(processedPaginatedActivities);
           setTotalPages(data.totalPages);
           setLoading(false);
-          localStorage.setItem('userActivities', JSON.stringify(processedActivities));
         } catch (error) {
           console.error('Error fetching activities:', error);
-          const cachedActivities = localStorage.getItem('userActivities');
-          if (cachedActivities) {
-            const parsed = JSON.parse(cachedActivities);
-            setAllActivities(parsed);
-            setActivities(parsed.slice((currentPage - 1) * activitiesPerPage, currentPage * activitiesPerPage));
-          } else {
-            setAllActivities([]);
-            setActivities([]);
-          }
+          if(authUser.user.id){
+            const cachedActivities = localStorage.getItem(`userActivities_${authUser.user.id}`);
+            if (cachedActivities) {
+              const parsed = JSON.parse(cachedActivities);
+              setAllActivities(parsed);
+              setActivities(parsed.slice((currentPage - 1) * activitiesPerPage, currentPage * activitiesPerPage));
+            }
+          } 
         }
       }
       fetchedActivities();
     } else {
-      const cachedActivities = localStorage.getItem('userActivities');
-      if (cachedActivities) {
-        const parsed = JSON.parse(cachedActivities);
-        setAllActivities(parsed);
-        setActivities(parsed.slice((currentPage - 1) * activitiesPerPage, currentPage * activitiesPerPage));
-      }
+      setLoading(false);
+      setAllActivities([]);
+      setActivities([]);
     }
   }, [authUser, currentPage]);
 
@@ -143,7 +141,10 @@ function App() {
         const updatedActivities = [...allActivities, newActivity];
         setAllActivities(updatedActivities);
         setActivities(updatedActivities.slice((currentPage - 1) * activitiesPerPage, currentPage * activitiesPerPage));
-        localStorage.setItem('userActivities', JSON.stringify(updatedActivities));
+        localStorage.setItem(
+          `userActivities_${authUser.user.id}`, 
+          JSON.stringify(updatedActivities)
+        );
         fetchStreaks(authUser.token).then((streaks) => {
           setStreak(streaks);
         });
