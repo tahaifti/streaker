@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Calendar, Trophy } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import HeatMap from './components/HeatMap';
 import { StreakCounter, LongestStreak, ActivityForm, ActivityList } from './components';
 import { useAuth } from './utils/auth';
@@ -54,15 +54,22 @@ function App() {
     if (authUser) {
       const fetchedActivities = async () => {
         try {
-          const allData = await fetchAllActivities(authUser.token, 1, 0); // 0 means fetch all
-          console.log('allData:', allData.activities);
-          setAllActivities(allData.activities);
-          // fetching paginated activities
+          const allData = await fetchAllActivities(authUser.token, 1, 0);
+          const processedActivities = allData.activities.map(activity => ({
+            ...activity,
+            date: new Date(activity.date || activity.createdAt).toISOString().split('T')[0]
+          }));
+          setAllActivities(processedActivities);
+          
           const data = await fetchAllActivities(authUser.token, currentPage, activitiesPerPage);
-          setActivities(data.activities);
+          const processedPaginatedActivities = data.activities.map(activity => ({
+            ...activity,
+            date: new Date(activity.date || activity.createdAt).toISOString().split('T')[0]
+          }));
+          setActivities(processedPaginatedActivities);
           setTotalPages(data.totalPages);
           setLoading(false);
-          localStorage.setItem('userActivities', JSON.stringify(allData.activities));
+          localStorage.setItem('userActivities', JSON.stringify(processedActivities));
         } catch (error) {
           console.error('Error fetching activities:', error);
           const cachedActivities = localStorage.getItem('userActivities');
@@ -71,10 +78,8 @@ function App() {
             setAllActivities(parsed);
             setActivities(parsed.slice((currentPage - 1) * activitiesPerPage, currentPage * activitiesPerPage));
           } else {
-            console.error('No cached activities found');
-            // Ensure activities is always an array
             setAllActivities([]);
-            setActivities([]); 
+            setActivities([]);
           }
         }
       }
@@ -82,7 +87,9 @@ function App() {
     } else {
       const cachedActivities = localStorage.getItem('userActivities');
       if (cachedActivities) {
-        setActivities(JSON.parse(cachedActivities));
+        const parsed = JSON.parse(cachedActivities);
+        setAllActivities(parsed);
+        setActivities(parsed.slice((currentPage - 1) * activitiesPerPage, currentPage * activitiesPerPage));
       }
     }
   }, [authUser, currentPage]);
@@ -131,9 +138,9 @@ function App() {
         const newActivity = {
           id: response.data.id,
           description: response.data.description,
-          date: response.data.createdAt,
+          date: new Date(response.data.createdAt).toISOString().split('T')[0],
         };
-        const updatedActivities = [...(allActivities || []), newActivity];
+        const updatedActivities = [...allActivities, newActivity];
         setAllActivities(updatedActivities);
         setActivities(updatedActivities.slice((currentPage - 1) * activitiesPerPage, currentPage * activitiesPerPage));
         localStorage.setItem('userActivities', JSON.stringify(updatedActivities));
