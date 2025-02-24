@@ -142,7 +142,7 @@ function App() {
         setAllActivities(updatedActivities);
         setActivities(updatedActivities.slice((currentPage - 1) * activitiesPerPage, currentPage * activitiesPerPage));
         localStorage.setItem(
-          `userActivities_${authUser.user.id}`, 
+          `userActivities_${authUser.user.userId}`, 
           JSON.stringify(updatedActivities)
         );
         fetchStreaks(authUser.token).then((streaks) => {
@@ -172,7 +172,7 @@ function App() {
       ) : (
         <>
           {authUser?.user.name && (
-            <div className="bg-white p-4 sm:p-6 mt-4 rounded-xl shadow-sm text-xl font-semibold text-gray-800">
+            <div className="bg-green-500 p-4 sm:p-6 sm:ml-6 sm:w-96 mt-4 ml-4 rounded-xl shadow-sm text-xl font-semibold text-gray-800">
               Welcome back, {authUser.user.name}! 👋
             </div>
           )}
