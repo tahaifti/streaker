@@ -50,6 +50,48 @@ function App() {
   }, [authUser]);
 
   // Fetch activities on component mount
+  // useEffect(() => {
+  //   if (authUser) {
+  //     const fetchedActivities = async () => {
+  //       try {
+  //         const allData = await fetchAllActivities(authUser.token, 1, 0);
+  //         const processedActivities = allData.activities.map(activity => ({
+  //           ...activity,
+  //           date: new Date(activity.date || activity.createdAt).toISOString().split('T')[0]
+  //         }));
+  //         setAllActivities(processedActivities);
+  //         localStorage.setItem(
+  //           `userActivities_${authUser.user.id}`, 
+  //           JSON.stringify(processedActivities));
+          
+  //         const data = await fetchAllActivities(authUser.token, currentPage, activitiesPerPage);
+  //         const processedPaginatedActivities = data.activities.map(activity => ({
+  //           ...activity,
+  //           date: new Date(activity.date || activity.createdAt).toISOString().split('T')[0]
+  //         }));
+  //         setActivities(processedPaginatedActivities);
+  //         setTotalPages(data.totalPages);
+  //         setLoading(false);
+  //       } catch (error) {
+  //         console.error('Error fetching activities:', error);
+  //         if(authUser.user.id){
+  //           const cachedActivities = localStorage.getItem(`userActivities_${authUser.user.id}`);
+  //           if (cachedActivities) {
+  //             const parsed = JSON.parse(cachedActivities);
+  //             setAllActivities(parsed);
+  //             setActivities(parsed.slice((currentPage - 1) * activitiesPerPage, currentPage * activitiesPerPage));
+  //           }
+  //         } 
+  //       }
+  //     }
+  //     fetchedActivities();
+  //   } else {
+  //     setLoading(false);
+  //     setAllActivities([]);
+  //     setActivities([]);
+  //   }
+  // }, [authUser, currentPage]);
+
   useEffect(() => {
     if (authUser) {
       const fetchedActivities = async () => {
@@ -60,10 +102,11 @@ function App() {
             date: new Date(activity.date || activity.createdAt).toISOString().split('T')[0]
           }));
           setAllActivities(processedActivities);
-          localStorage.setItem(
-            `userActivities_${authUser.user.id}`, 
-            JSON.stringify(processedActivities));
-          
+          // Comment out localStorage setItem
+          // localStorage.setItem(
+          //   `userActivities_${authUser.user.id}`, 
+          //   JSON.stringify(processedActivities));
+
           const data = await fetchAllActivities(authUser.token, currentPage, activitiesPerPage);
           const processedPaginatedActivities = data.activities.map(activity => ({
             ...activity,
@@ -74,14 +117,15 @@ function App() {
           setLoading(false);
         } catch (error) {
           console.error('Error fetching activities:', error);
-          if(authUser.user.id){
-            const cachedActivities = localStorage.getItem(`userActivities_${authUser.user.id}`);
-            if (cachedActivities) {
-              const parsed = JSON.parse(cachedActivities);
-              setAllActivities(parsed);
-              setActivities(parsed.slice((currentPage - 1) * activitiesPerPage, currentPage * activitiesPerPage));
-            }
-          } 
+          // Comment out localStorage getItem and related logic
+          // if(authUser.user.id){
+          //   const cachedActivities = localStorage.getItem(`userActivities_${authUser.user.id}`);
+          //   if (cachedActivities) {
+          //     const parsed = JSON.parse(cachedActivities);
+          //     setAllActivities(parsed);
+          //     setActivities(parsed.slice((currentPage - 1) * activitiesPerPage, currentPage * activitiesPerPage));
+          //   }
+          // } 
         }
       }
       fetchedActivities();
@@ -129,6 +173,34 @@ function App() {
     }));
   }, [allActivities]);
 
+  // const handleActivitySubmit = async (description: string) => {
+  //   if (authUser) {
+  //     try {
+  //       const response = await addActivity(authUser.token, description);
+  //       const newActivity = {
+  //         id: response.data.id,
+  //         description: response.data.description,
+  //         date: new Date(response.data.createdAt).toISOString().split('T')[0],
+  //       };
+  //       const updatedActivities = [...allActivities, newActivity];
+  //       setAllActivities(updatedActivities);
+  //       setActivities(updatedActivities.slice((currentPage - 1) * activitiesPerPage, currentPage * activitiesPerPage));
+  //       localStorage.setItem(
+  //         `userActivities_${authUser.user.userId}`, 
+  //         JSON.stringify(updatedActivities)
+  //       );
+  //       fetchStreaks(authUser.token).then((streaks) => {
+  //         setStreak(streaks);
+  //       });
+  //     } catch (error) {
+  //       console.error('Error submitting activity:', error);
+  //     }
+  //   } else {
+  //     console.error('User not authenticated - cannot submit activity');
+  //   }
+  // };
+
+
   const handleActivitySubmit = async (description: string) => {
     if (authUser) {
       try {
@@ -141,10 +213,11 @@ function App() {
         const updatedActivities = [...allActivities, newActivity];
         setAllActivities(updatedActivities);
         setActivities(updatedActivities.slice((currentPage - 1) * activitiesPerPage, currentPage * activitiesPerPage));
-        localStorage.setItem(
-          `userActivities_${authUser.user.userId}`, 
-          JSON.stringify(updatedActivities)
-        );
+        // Comment out localStorage setItem
+        // localStorage.setItem(
+        //   `userActivities_${authUser.user.userId}`, 
+        //   JSON.stringify(updatedActivities)
+        // );
         fetchStreaks(authUser.token).then((streaks) => {
           setStreak(streaks);
         });
