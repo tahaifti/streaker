@@ -22,7 +22,7 @@ const ActivityList: React.FC<ActivityListProps> = ({ activities }) => {
       {activities.map((activity) => (
       <div
         key={activity.id}
-        className="flex items-center gap-4 p-4 bg-white rounded-lg shadow-sm"
+        className="flex items-center gap-4 p-4 bg-slate-200 shadow-sm rounded-lg "
       >
         <CheckCircle className="text-green-500" size={24} />
         <div className="flex-1">
