@@ -6,6 +6,7 @@ import { addActivity, fetchAllActivities, fetchLongestStreak, fetchStreaks } fro
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HeatMap from './components/HeatMap';
+import InstallPrompt from './components/InstallPrompt';
 
 function App() {
   const [activities, setActivities] = useState<Array<{ id: string; description: string; date: string, createdAt?: string }>>([]);
@@ -185,7 +186,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-
+      <InstallPrompt />  
       {/* Welcome Message */}
       {authUser?.user.name && (
         <div className="mx-4 sm:mx-6 lg:mx-8 mt-4">
