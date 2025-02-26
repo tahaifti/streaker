@@ -355,7 +355,7 @@ const HeatMap: React.FC<HeatMapProps> = ({ data }) => {
             </div>
 
             {/* Legend */}
-            <div className="mt-4 flex items-center text-xs text-gray-400">
+            <div className="mt-4 flex items-center text-xs text-gray-400 justify-end">
                 <span className="mr-2">Less</span>
                 <div className="flex gap-1">
                     <div className="w-3 h-3 bg-gray-800 rounded-sm" />
