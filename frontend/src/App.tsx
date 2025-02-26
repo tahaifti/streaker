@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Calendar } from 'lucide-react';
-import HeatMap from './components/HeatMap';
 import { StreakCounter, LongestStreak, ActivityForm, ActivityList } from './components';
 import { useAuth } from './utils/auth';
 import { addActivity, fetchAllActivities, fetchLongestStreak, fetchStreaks } from './utils/api';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import NewHeatMap from './components/NewHeatMap';
+import HeatMap from './components/HeatMap';
 
 function App() {
   const [activities, setActivities] = useState<Array<{ id: string; description: string; date: string, createdAt?: string }>>([]);
@@ -51,62 +50,23 @@ function App() {
   }, [authUser]);
 
   // Fetch activities on component mount
-  // useEffect(() => {
-  //   if (authUser) {
-  //     const fetchedActivities = async () => {
-  //       try {
-  //         const allData = await fetchAllActivities(authUser.token, 1, 0);
-  //         const processedActivities = allData.activities.map(activity => ({
-  //           ...activity,
-  //           date: new Date(activity.date || activity.createdAt).toISOString().split('T')[0]
-  //         }));
-  //         setAllActivities(processedActivities);
-  //         localStorage.setItem(
-  //           `userActivities_${authUser.user.id}`, 
-  //           JSON.stringify(processedActivities));
-
-  //         const data = await fetchAllActivities(authUser.token, currentPage, activitiesPerPage);
-  //         const processedPaginatedActivities = data.activities.map(activity => ({
-  //           ...activity,
-  //           date: new Date(activity.date || activity.createdAt).toISOString().split('T')[0]
-  //         }));
-  //         setActivities(processedPaginatedActivities);
-  //         setTotalPages(data.totalPages);
-  //         setLoading(false);
-  //       } catch (error) {
-  //         console.error('Error fetching activities:', error);
-  //         if(authUser.user.id){
-  //           const cachedActivities = localStorage.getItem(`userActivities_${authUser.user.id}`);
-  //           if (cachedActivities) {
-  //             const parsed = JSON.parse(cachedActivities);
-  //             setAllActivities(parsed);
-  //             setActivities(parsed.slice((currentPage - 1) * activitiesPerPage, currentPage * activitiesPerPage));
-  //           }
-  //         } 
-  //       }
-  //     }
-  //     fetchedActivities();
-  //   } else {
-  //     setLoading(false);
-  //     setAllActivities([]);
-  //     setActivities([]);
-  //   }
-  // }, [authUser, currentPage]);
-
   useEffect(() => {
     if (authUser) {
       const fetchedActivities = async () => {
         try {
           const allData = await fetchAllActivities(authUser.token, 1, 0);
-          console.log('Fetched all activities:', allData); // Debug log
+          // console.log('Fetched all activities:', allData); // Debug log
 
           const processedActivities = allData.activities.map((activity: any) => ({
             ...activity,
             date: new Date(activity.date || activity.createdAt).toISOString().split('T')[0]
           }));
-          console.log('Processed activities:', processedActivities); // Debug log
+          // console.log('Processed activities:', processedActivities); // Debug log
 
           setAllActivities(processedActivities);
+          localStorage.setItem(
+            `userActivities_${authUser.user.id}`,
+            JSON.stringify(processedActivities));
 
           const data = await fetchAllActivities(authUser.token, currentPage, activitiesPerPage);
           const processedPaginatedActivities = data.activities.map((activity: any) => ({
@@ -118,7 +78,15 @@ function App() {
           setLoading(false);
         } catch (error) {
           console.error('Detailed error fetching activities:', error);
-          setLoading(false);
+          if (authUser.user.id) {
+            const cachedActivities = localStorage.getItem(`userActivities_${authUser.user.id}`);
+            if (cachedActivities) {
+              const parsed = JSON.parse(cachedActivities);
+              setAllActivities(parsed);
+              setActivities(parsed.slice((currentPage - 1) * activitiesPerPage, currentPage * activitiesPerPage));
+              setLoading(false);
+            }
+          }
         }
       };
       fetchedActivities();
@@ -144,10 +112,10 @@ function App() {
 
   // Transform activities data for HeatMap
   const heatmapData = useMemo(() => {
-    console.log('All activities for heatmap:', allActivities); // Debug log
+    // console.log('All activities for heatmap:', allActivities); // Debug log
 
     if (!Array.isArray(allActivities) || allActivities.length === 0) {
-      console.log('No activities available for heatmap');
+      // console.log('No activities available for heatmap');
       return [];
     }
 
@@ -182,7 +150,7 @@ function App() {
       count: countsByDate[date]
     }));
 
-    console.log('Processed heatmap data:', result); // Debug log
+    // console.log('Processed heatmap data:', result); // Debug log
     return result;
   }, [allActivities]);
 
@@ -199,11 +167,10 @@ function App() {
         const updatedActivities = [...allActivities, newActivity];
         setAllActivities(updatedActivities);
         setActivities(updatedActivities.slice((currentPage - 1) * activitiesPerPage, currentPage * activitiesPerPage));
-        // Comment out localStorage setItem
-        // localStorage.setItem(
-        //   `userActivities_${authUser.user.userId}`, 
-        //   JSON.stringify(updatedActivities)
-        // );
+        localStorage.setItem(
+          `userActivities_${authUser.user.userId}`, 
+          JSON.stringify(updatedActivities)
+        );
         fetchStreaks(authUser.token).then((streaks) => {
           setStreak(streaks);
         });
@@ -251,15 +218,8 @@ function App() {
                     </div>
                   </div>
                   <div className="overflow-x-auto">
-                    {/* <HeatMap data={heatmapData} /> */}
-                    <NewHeatMap data={heatmapData} />
+                    <HeatMap data={heatmapData} />
                   </div>
-                  {/* <div className="min-h-screen bg-gray-100 flex items-center justify-center p-2 sm:p-4">
-                    <div className="w-full max-w-5xl">
-                      <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-gray-800">Activity Heatmap</h1>
-                      <NewHeatMap data={heatmapData} />
-                    </div>
-                  </div> */}
                 </div>
 
                 <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm">
