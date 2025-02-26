@@ -19,7 +19,7 @@ const ActivityForm: React.FC<ActivityFormProps> = ({ onSubmit }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2">
+    <form onSubmit={handleSubmit} className="flex gap-2 flex-col sm:flex-row md:flex-row">
       <input
         type="text"
         value={activity}
