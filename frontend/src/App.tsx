@@ -183,14 +183,20 @@ function App() {
   };
 
   return (
-    <>
+    <div className="min-h-screen bg-gray-50">
       <Header />
+
+      {/* Welcome Message */}
       {authUser?.user.name && (
-        <div className="bg-green-500 p-4 w-96 my-4 ml-4 rounded-xl shadow-sm text-xl font-semibold text-gray-800 sm:p-6 sm:ml-6 sm:w-96">
-          Welcome back, {authUser.user.name}! 👋
+        <div className="mx-4 sm:mx-6 lg:mx-8 mt-4">
+          <div className="bg-green-500 p-4 rounded-xl shadow-sm text-lg sm:text-xl font-semibold text-gray-800 max-w-md">
+            Welcome back, {authUser.user.name}! 👋
+          </div>
         </div>
       )}
-      <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center">
+
+      {/* Main Content */}
+      <main className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <div className="flex items-center space-x-2">
@@ -202,59 +208,61 @@ function App() {
             </div>
           </div>
         ) : (
-          <>
-            <main className="max-w-fit bg-red-400 mx-4 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex justify-center items-center">
-              <div className="grid gap-6 sm:gap-8">
-                <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-4 sm:gap-0">
-                    <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
-                      <Calendar size={20} />
-                      Activity History
-                    </h2>
-                    <div className="flex items-center gap-4 sm:gap-6 w-full sm:w-auto justify-between sm:justify-end">
-                      <LongestStreak count={longestStreak} />
-                      <div className="hidden sm:block w-px h-8 bg-gray-200" />
-                      <StreakCounter streak={streak} />
-                    </div>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <HeatMap data={heatmapData} />
-                  </div>
-                </div>
-
-                <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm">
-                  <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6">Activities</h2>
-                  <ActivityForm onSubmit={handleActivitySubmit} />
-                  <div className="mt-4 sm:mt-6">
-                    <ActivityList activities={activities} />
-                  </div>
-                  <div className="flex justify-between mt-6">
-                    <button
-                      onClick={handlePreviousPage}
-                      disabled={currentPage === 1}
-                      className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50"
-                    >
-                      Previous
-                    </button>
-                    <span className="text-gray-600">
-                      Page {currentPage} of {totalPages}
-                    </span>
-                    <button
-                      onClick={handleNextPage}
-                      disabled={currentPage === totalPages}
-                      className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50"
-                    >
-                      Next
-                    </button>
-                  </div>
+          <div className="max-w-7xl mx-auto space-y-6">
+            {/* Activity History Card */}
+            <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-4">
+                <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+                  <Calendar className="w-5 h-5 sm:w-6 sm:h-6" />
+                  Activity History
+                </h2>
+                <div className="flex items-center gap-4 w-full sm:w-auto">
+                  <LongestStreak count={longestStreak} />
+                  <div className="hidden sm:block w-px h-8 bg-gray-200" />
+                  <StreakCounter streak={streak} />
                 </div>
               </div>
-            </main>
-          </>
+              <div className="overflow-x-auto -mx-4 sm:mx-0">
+                <div className="min-w-fit px-4 sm:px-0">
+                  <HeatMap data={heatmapData} />
+                </div>
+              </div>
+            </div>
+
+            {/* Activities Card */}
+            <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm">
+              <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6">Activities</h2>
+              <ActivityForm onSubmit={handleActivitySubmit} />
+              <div className="mt-4 sm:mt-6">
+                <ActivityList activities={activities} />
+              </div>
+
+              {/* Pagination */}
+              <div className="flex items-center justify-between mt-6 gap-4">
+                <button
+                  onClick={handlePreviousPage}
+                  disabled={currentPage === 1}
+                  className="px-3 sm:px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50 text-sm sm:text-base"
+                >
+                  Previous
+                </button>
+                <span className="text-sm sm:text-base text-gray-600">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className="px-3 sm:px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50 text-sm sm:text-base"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
         )}
-        <Footer />
-      </div>
-    </>
+      </main>
+      <Footer />
+    </div>
   );
 }
 
