@@ -89,6 +89,7 @@ const Login: React.FC = () => {
                                     name="email"
                                     type="email"
                                     autoComplete="email"
+                                    placeholder='dexterifti@streaker.com'
                                     required
                                     value={formData.email}
                                     onChange={handleChange}
@@ -107,6 +108,7 @@ const Login: React.FC = () => {
                                     name="password"
                                     type="password"
                                     autoComplete="current-password"
+                                    placeholder='********'
                                     required
                                     value={formData.password}
                                     onChange={handleChange}

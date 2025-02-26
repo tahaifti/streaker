@@ -108,6 +108,7 @@ const Register: React.FC = () => {
                                     id="name"
                                     name="name"
                                     type="text"
+                                    placeholder='John Doe'
                                     autoComplete="name"
                                     required
                                     value={formData.name}
@@ -127,11 +128,24 @@ const Register: React.FC = () => {
                                     name="username"
                                     type="text"
                                     autoComplete="username"
+                                    placeholder='dexter@ifti'
                                     required
+                                    pattern="^\S*$"
+                                    title="Username must not contain spaces"
                                     value={formData.username}
-                                    onChange={handleChange}
+                                    onChange={(e) => {
+                                        if (e.target.value.includes(' ')) {
+                                            setError('Username cannot contain spaces');
+                                        } else {
+                                            setError('');
+                                        }
+                                        handleChange(e);
+                                    }}
                                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                 />
+                                <p className="mt-1 text-sm text-gray-500">
+                                    Please enter a unique username without spaces
+                                </p>
                             </div>
                         </div>
 
@@ -145,6 +159,7 @@ const Register: React.FC = () => {
                                     name="email"
                                     type="email"
                                     autoComplete="email"
+                                    placeholder='dexterifti@streaker.com'
                                     required
                                     value={formData.email}
                                     onChange={handleChange}
@@ -163,6 +178,7 @@ const Register: React.FC = () => {
                                     name="password"
                                     type="password"
                                     autoComplete="new-password"
+                                    placeholder='********'
                                     required
                                     value={formData.password}
                                     onChange={handleChange}
@@ -181,6 +197,7 @@ const Register: React.FC = () => {
                                     name="confirmPassword"
                                     type="password"
                                     autoComplete="new-password"
+                                    placeholder='********'
                                     required
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
