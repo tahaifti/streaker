@@ -6,6 +6,7 @@ import { useAuth } from './utils/auth';
 import { addActivity, fetchAllActivities, fetchLongestStreak, fetchStreaks } from './utils/api';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import NewHeatMap from './components/NewHeatMap';
 
 function App() {
   const [activities, setActivities] = useState<Array<{ id: string; description: string; date: string, createdAt?: string }>>([]);
@@ -63,7 +64,7 @@ function App() {
   //         localStorage.setItem(
   //           `userActivities_${authUser.user.id}`, 
   //           JSON.stringify(processedActivities));
-          
+
   //         const data = await fetchAllActivities(authUser.token, currentPage, activitiesPerPage);
   //         const processedPaginatedActivities = data.activities.map(activity => ({
   //           ...activity,
@@ -97,18 +98,18 @@ function App() {
       const fetchedActivities = async () => {
         try {
           const allData = await fetchAllActivities(authUser.token, 1, 0);
-          const processedActivities = allData.activities.map(activity => ({
+          console.log('Fetched all activities:', allData); // Debug log
+
+          const processedActivities = allData.activities.map((activity: any) => ({
             ...activity,
             date: new Date(activity.date || activity.createdAt).toISOString().split('T')[0]
           }));
+          console.log('Processed activities:', processedActivities); // Debug log
+
           setAllActivities(processedActivities);
-          // Comment out localStorage setItem
-          // localStorage.setItem(
-          //   `userActivities_${authUser.user.id}`, 
-          //   JSON.stringify(processedActivities));
 
           const data = await fetchAllActivities(authUser.token, currentPage, activitiesPerPage);
-          const processedPaginatedActivities = data.activities.map(activity => ({
+          const processedPaginatedActivities = data.activities.map((activity: any) => ({
             ...activity,
             date: new Date(activity.date || activity.createdAt).toISOString().split('T')[0]
           }));
@@ -116,18 +117,10 @@ function App() {
           setTotalPages(data.totalPages);
           setLoading(false);
         } catch (error) {
-          console.error('Error fetching activities:', error);
-          // Comment out localStorage getItem and related logic
-          // if(authUser.user.id){
-          //   const cachedActivities = localStorage.getItem(`userActivities_${authUser.user.id}`);
-          //   if (cachedActivities) {
-          //     const parsed = JSON.parse(cachedActivities);
-          //     setAllActivities(parsed);
-          //     setActivities(parsed.slice((currentPage - 1) * activitiesPerPage, currentPage * activitiesPerPage));
-          //   }
-          // } 
+          console.error('Detailed error fetching activities:', error);
+          setLoading(false);
         }
-      }
+      };
       fetchedActivities();
     } else {
       setLoading(false);
@@ -151,54 +144,47 @@ function App() {
 
   // Transform activities data for HeatMap
   const heatmapData = useMemo(() => {
+    console.log('All activities for heatmap:', allActivities); // Debug log
+
+    if (!Array.isArray(allActivities) || allActivities.length === 0) {
+      console.log('No activities available for heatmap');
+      return [];
+    }
+
     const countsByDate = allActivities.reduce<Record<string, number>>((acc, activity) => {
-      const activityDate = activity.date || activity.createdAt;
-      const date = typeof activityDate === 'string'
-        ? activityDate.split('T')[0]
-        : activityDate
-          ? new Date(activityDate).toISOString().split('T')[0]
-          : new Date().toISOString().split('T')[0];
+      if (!activity) return acc;
 
-      const activityCount = Array.isArray(activity.description)
-        ? activity.description.length
-        : 1;
+      try {
+        const activityDate = activity.date || activity.createdAt;
+        if (!activityDate) {
+          console.log('Activity missing date:', activity);
+          return acc;
+        }
 
-      acc[date] = (acc[date] || 0) + activityCount;
-      return acc;
+        const date = typeof activityDate === 'string'
+          ? activityDate.split('T')[0]
+          : new Date(activityDate).toISOString().split('T')[0];
+
+        const activityCount = Array.isArray(activity.description)
+          ? activity.description.length
+          : 1;
+
+        acc[date] = (acc[date] || 0) + activityCount;
+        return acc;
+      } catch (error) {
+        console.error('Error processing activity for heatmap:', error, activity);
+        return acc;
+      }
     }, {});
 
-    return Object.keys(countsByDate).map(date => ({
+    const result = Object.keys(countsByDate).map(date => ({
       date,
       count: countsByDate[date]
     }));
-  }, [allActivities]);
 
-  // const handleActivitySubmit = async (description: string) => {
-  //   if (authUser) {
-  //     try {
-  //       const response = await addActivity(authUser.token, description);
-  //       const newActivity = {
-  //         id: response.data.id,
-  //         description: response.data.description,
-  //         date: new Date(response.data.createdAt).toISOString().split('T')[0],
-  //       };
-  //       const updatedActivities = [...allActivities, newActivity];
-  //       setAllActivities(updatedActivities);
-  //       setActivities(updatedActivities.slice((currentPage - 1) * activitiesPerPage, currentPage * activitiesPerPage));
-  //       localStorage.setItem(
-  //         `userActivities_${authUser.user.userId}`, 
-  //         JSON.stringify(updatedActivities)
-  //       );
-  //       fetchStreaks(authUser.token).then((streaks) => {
-  //         setStreak(streaks);
-  //       });
-  //     } catch (error) {
-  //       console.error('Error submitting activity:', error);
-  //     }
-  //   } else {
-  //     console.error('User not authenticated - cannot submit activity');
-  //   }
-  // };
+    console.log('Processed heatmap data:', result); // Debug log
+    return result;
+  }, [allActivities]);
 
 
   const handleActivitySubmit = async (description: string) => {
@@ -230,76 +216,85 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
       <Header />
-      {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="flex items-center space-x-2">
-            <svg className="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span className="text-lg text-gray-700">Loading your data...</span>
-          </div>
+      {authUser?.user.name && (
+        <div className="bg-green-500 p-4 w-96 my-4 ml-4 rounded-xl shadow-sm text-xl font-semibold text-gray-800 sm:p-6 sm:ml-6 sm:w-96">
+          Welcome back, {authUser.user.name}! 👋
         </div>
-      ) : (
-        <>
-          {authUser?.user.name && (
-              <div className="bg-green-500 p-4 w-96 mt-4 ml-4 rounded-xl shadow-sm text-xl font-semibold text-gray-800 sm:p-6 sm:ml-6 sm:w-96">
-              Welcome back, {authUser.user.name}! 👋
+      )}
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center">
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="flex items-center space-x-2">
+              <svg className="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span className="text-lg text-gray-700">Loading your data...</span>
             </div>
-          )}
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-            <div className="grid gap-6 sm:gap-8">
-              <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-4 sm:gap-0">
-                  <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
-                    <Calendar size={20} />
-                    Activity History
-                  </h2>
-                  <div className="flex items-center gap-4 sm:gap-6 w-full sm:w-auto justify-between sm:justify-end">
-                    <LongestStreak count={longestStreak} />
-                    <div className="hidden sm:block w-px h-8 bg-gray-200" />
-                    <StreakCounter streak={streak} />
+          </div>
+        ) : (
+          <>
+            <main className="max-w-fit bg-red-400 mx-4 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex justify-center items-center">
+              <div className="grid gap-6 sm:gap-8">
+                <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-4 sm:gap-0">
+                    <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+                      <Calendar size={20} />
+                      Activity History
+                    </h2>
+                    <div className="flex items-center gap-4 sm:gap-6 w-full sm:w-auto justify-between sm:justify-end">
+                      <LongestStreak count={longestStreak} />
+                      <div className="hidden sm:block w-px h-8 bg-gray-200" />
+                      <StreakCounter streak={streak} />
+                    </div>
+                  </div>
+                  <div className="overflow-x-auto">
+                    {/* <HeatMap data={heatmapData} /> */}
+                    <NewHeatMap data={heatmapData} />
+                  </div>
+                  {/* <div className="min-h-screen bg-gray-100 flex items-center justify-center p-2 sm:p-4">
+                    <div className="w-full max-w-5xl">
+                      <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-gray-800">Activity Heatmap</h1>
+                      <NewHeatMap data={heatmapData} />
+                    </div>
+                  </div> */}
+                </div>
+
+                <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm">
+                  <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6">Activities</h2>
+                  <ActivityForm onSubmit={handleActivitySubmit} />
+                  <div className="mt-4 sm:mt-6">
+                    <ActivityList activities={activities} />
+                  </div>
+                  <div className="flex justify-between mt-6">
+                    <button
+                      onClick={handlePreviousPage}
+                      disabled={currentPage === 1}
+                      className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-gray-600">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages}
+                      className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50"
+                    >
+                      Next
+                    </button>
                   </div>
                 </div>
-                <div className="overflow-x-auto">
-                  <HeatMap data={heatmapData} />
-                </div>
               </div>
-
-              <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm">
-                <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6">Activities</h2>
-                <ActivityForm onSubmit={handleActivitySubmit} />
-                <div className="mt-4 sm:mt-6">
-                  <ActivityList activities={activities} />
-                </div>
-                <div className="flex justify-between mt-6">
-                  <button
-                    onClick={handlePreviousPage}
-                    disabled={currentPage === 1}
-                    className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50"
-                  >
-                    Previous
-                  </button>
-                  <span className="text-gray-600">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <button
-                    onClick={handleNextPage}
-                    disabled={currentPage === totalPages}
-                    className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            </div>
-          </main>
-        </>
-      )}
-      <Footer />
-    </div>
+            </main>
+          </>
+        )}
+        <Footer />
+      </div>
+    </>
   );
 }
 
