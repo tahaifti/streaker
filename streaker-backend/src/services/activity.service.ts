@@ -60,6 +60,10 @@ export class ActivityService {
             orderBy : {
                 date : 'desc'
             },
+            cacheStrategy : {
+                ttl : 60,  // 1 minute
+                swr : 300  // 5 minutes
+            }
             })
         } catch (error: any) {
             throw new HTTPException(500, { message: `Failed to get activities: ${error.message}` });
@@ -77,6 +81,10 @@ export class ActivityService {
                     orderBy: {
                         createdAt: 'desc',
                     },
+                    cacheStrategy : {
+                        ttl : 60,  // 1 minute
+                        swr : 300  // 5 minutes
+                    }
                 });
 
                 return {
@@ -96,12 +104,19 @@ export class ActivityService {
                 },
                 skip,
                 take: limit,
+                cacheStrategy: {
+                    ttl: 60,  // 1 minute
+                    swr: 300  // 5 minutes
+                }
             });
 
             const totalActivities = await this.db.activity.count({
                 where: {
                     userId,
                 },
+                cacheStrategy: {
+                    ttl: 60,  // 1 minute
+                }
             });
             return {
                 activities,
@@ -123,6 +138,9 @@ export class ActivityService {
                 orderBy: {
                     date: 'desc',
                 },
+                cacheStrategy: {
+                    ttl: 60,  // 1 minute
+                }
             });
 
             let streak = 0;
@@ -186,6 +204,9 @@ export class ActivityService {
                 orderBy: {
                     date: 'asc', // Sort by date in ascending order
                 },
+                cacheStrategy: {
+                    ttl: 60,  // 1 minute
+                }
             });
 
             let longestStreak = 0;
