@@ -1,119 +1,55 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Calendar } from 'lucide-react';
 import { StreakCounter, LongestStreak, ActivityForm, ActivityList } from './components';
 import { useAuth } from './utils/auth';
-import { addActivity, fetchAllActivities, fetchLongestStreak, fetchStreaks } from './utils/api';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HeatMap from './components/HeatMap';
 import InstallPrompt from './components/InstallPrompt';
+import { useStreaks, useLongestStreak, useActivities, useAllActivities, useAddActivity } from './hooks/useQueries'
+
 
 function App() {
-  const [activities, setActivities] = useState<Array<{ id: string; description: string; date: string, createdAt?: string }>>([]);
-  const [allActivities, setAllActivities] = useState<Array<{ id: string; description: string; date: string, createdAt?: string }>>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [streak, setStreak] = useState(0);
-  const [longestStreak, setLongestStreak] = useState(0);
+  const activitiesPerPage = 3;
   const { authUser } = useAuth();
 
-  const activitiesPerPage = 3;
+  const { data: streak = 0, isLoading: streakLoading } = useStreaks(authUser?.token ?? '')
+  const { data: longestStreak = 0, isLoading: longestStreakLoading } = useLongestStreak(authUser?.token ?? '')
+  const {
+    data: allActivitesData,
+    isLoading: allActivitiesLoading
+  } = useAllActivities(authUser?.token ?? '', 1, 0);
+  const {
+    data: activitiesData,
+    isLoading: activitiesLoading
+  } = useActivities(authUser?.token ?? '', currentPage, activitiesPerPage);
 
-  // Fetch streaks on component mount
-  useEffect(() => {
-    if (authUser) {
+
+  const addActivityMutation = useAddActivity();
+
+  const loading = streakLoading || longestStreakLoading || activitiesLoading || allActivitiesLoading;
+
+  const allActivities = allActivitesData?.activities ?? [];
+  const activities = activitiesData?.activities ?? [];
+  const totalPages = activitiesData?.totalPages ?? 1;
+
+  const handleActivitySubmit = async (description: string) => {
+    if (authUser?.token) {
       try {
-        fetchStreaks(authUser.token).then((streaks) => {
-          setStreak(streaks);
-        });
+        await addActivityMutation.mutateAsync({
+          token: authUser.token,
+          description
+        })
       } catch (error) {
-        console.error('Error fetching streaks:', error);
+        console.error('Error submitting activity:', error)
       }
-    } else {
-      console.error('User not authenticated - cannot fetch streaks');
     }
-  }, [authUser]);
-
-  // Fetch longest streak on component mount
-  useEffect(() => {
-    if (authUser) {
-      try {
-        fetchLongestStreak(authUser.token).then((streaks) => {
-          setLongestStreak(streaks);
-        });
-      } catch (error) {
-        console.error('Error fetching longest streak:', error);
-      }
-    } else {
-      console.error('User not authenticated - cannot fetch longest streak');
-    }
-  }, [authUser]);
-
-  // Fetch activities on component mount
-  useEffect(() => {
-    if (authUser) {
-      const fetchedActivities = async () => {
-        try {
-          const allData = await fetchAllActivities(authUser.token, 1, 0);
-          // console.log('Fetched all activities:', allData); // Debug log
-
-          const processedActivities = allData.activities.map((activity: any) => ({
-            ...activity,
-            date: new Date(activity.date || activity.createdAt).toISOString().split('T')[0]
-          }));
-          // console.log('Processed activities:', processedActivities); // Debug log
-
-          setAllActivities(processedActivities);
-          localStorage.setItem(
-            `userActivities_${authUser.user.id}`,
-            JSON.stringify(processedActivities));
-
-          const data = await fetchAllActivities(authUser.token, currentPage, activitiesPerPage);
-          const processedPaginatedActivities = data.activities.map((activity: any) => ({
-            ...activity,
-            date: new Date(activity.date || activity.createdAt).toISOString().split('T')[0]
-          }));
-          setActivities(processedPaginatedActivities);
-          setTotalPages(data.totalPages);
-          setLoading(false);
-        } catch (error) {
-          console.error('Detailed error fetching activities:', error);
-          if (authUser.user.id) {
-            const cachedActivities = localStorage.getItem(`userActivities_${authUser.user.id}`);
-            if (cachedActivities) {
-              const parsed = JSON.parse(cachedActivities);
-              setAllActivities(parsed);
-              setActivities(parsed.slice((currentPage - 1) * activitiesPerPage, currentPage * activitiesPerPage));
-              setLoading(false);
-            }
-          }
-        }
-      };
-      fetchedActivities();
-    } else {
-      setLoading(false);
-      setAllActivities([]);
-      setActivities([]);
-    }
-  }, [authUser, currentPage]);
-
-  // Handle page navigation
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
+  }
 
   // Transform activities data for HeatMap
   const heatmapData = useMemo(() => {
-    // console.log('All activities for heatmap:', allActivities); // Debug log
+    // console.log('All activities for heatmap:', activities); // Debug log
 
     if (!Array.isArray(allActivities) || allActivities.length === 0) {
       // console.log('No activities available for heatmap');
@@ -121,7 +57,7 @@ function App() {
     }
 
     const countsByDate = allActivities.reduce<Record<string, number>>((acc, activity) => {
-      if (!activity) return acc;
+      if (!allActivities) return acc;
 
       try {
         const activityDate = activity.date || activity.createdAt;
@@ -156,37 +92,18 @@ function App() {
   }, [allActivities]);
 
 
-  const handleActivitySubmit = async (description: string) => {
-    if (authUser) {
-      try {
-        const response = await addActivity(authUser.token, description);
-        const newActivity = {
-          id: response.data.id,
-          description: response.data.description,
-          date: new Date(response.data.createdAt).toISOString().split('T')[0],
-        };
-        const updatedActivities = [...allActivities, newActivity];
-        setAllActivities(updatedActivities);
-        setActivities(updatedActivities.slice((currentPage - 1) * activitiesPerPage, currentPage * activitiesPerPage));
-        localStorage.setItem(
-          `userActivities_${authUser.user.userId}`, 
-          JSON.stringify(updatedActivities)
-        );
-        fetchStreaks(authUser.token).then((streaks) => {
-          setStreak(streaks);
-        });
-      } catch (error) {
-        console.error('Error submitting activity:', error);
-      }
-    } else {
-      console.error('User not authenticated - cannot submit activity');
-    }
+  const handlePreviousPage = () => {
+    setCurrentPage(prev => Math.max(1, prev - 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage(prev => Math.min(totalPages, prev + 1));
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <InstallPrompt />  
+      <InstallPrompt />
       {/* Welcome Message */}
       {authUser?.user.name && (
         <div className="mx-4 sm:mx-6 lg:mx-8 mt-4">
