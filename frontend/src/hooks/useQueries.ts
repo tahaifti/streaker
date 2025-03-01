@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { fetchStreaks, fetchLongestStreak, fetchAllActivities, addActivity } from '../utils/api'
+import { fetchStreaks, fetchLongestStreak, fetchAllActivities, addActivity, fetchUserProfile } from '../utils/api'
 
 export function useStreaks(token: string) {
   return useQuery({
@@ -48,4 +48,13 @@ export function useAddActivity() {
       queryClient.invalidateQueries({ queryKey: ['streaks'] })
     }
   })
+}
+
+export function useUser(token : string) {
+    return useQuery({
+        queryKey : ['user'],
+        queryFn : () => fetchUserProfile(token),
+        enabled : !!token,
+        placeholderData : (previousData) => previousData
+    })
 }
