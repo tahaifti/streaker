@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { authRouter } from './routes/auth.routes';
 import { activityRouter } from './routes/activity.routes';
+import { userRouter } from './routes/user.routes';
 
 
 const app = new Hono<{
@@ -17,6 +18,7 @@ app.use('/*', cors({
 
 app.route('/auth', authRouter)
 app.route('/api/activity', activityRouter)
+app.route('/api/users', userRouter);
 
 app.get('/', (c) => {
   return c.html(`
