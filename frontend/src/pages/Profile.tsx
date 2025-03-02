@@ -1,20 +1,19 @@
 import React, { useState } from 'react';
 import { User, Settings, Calendar, Edit2, Save, X } from 'lucide-react';
 import { useAuth } from '../utils/auth';
-import { updateUserProfile } from '../utils/api';
-import { useUser, useAllActivities } from '../hooks/useQueries';
+import { useUser, useAllActivities, useUpdateUser, useChangePassword } from '../hooks/useQueries';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
-interface UserProfile {
-    id: string;
-    name: string;
-    username: string;
-    email: string;
-    current_streak: number;
-    longest_streak: number;
-    createdAt: string;
-}
+// interface UserProfile {
+//     id: string;
+//     name: string;
+//     username: string;
+//     email: string;
+//     current_streak: number;
+//     longest_streak: number;
+//     createdAt: string;
+// }
 
 interface Activity {
     id: string;
@@ -30,6 +29,8 @@ const Profile: React.FC = () => {
     // console.log(profileData);
     const { data: activities = [], isLoading: activitiesLoading } = useAllActivities(authUser?.token ?? '', 1, 0);
     // console.log(activities.activities);
+    const updateUserMutation = useUpdateUser();
+    const changePasswordMutation = useChangePassword();
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
@@ -39,7 +40,12 @@ const Profile: React.FC = () => {
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const [activeTab, setActiveTab] = useState<'profile' | 'activities'>('profile');
-
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [passwordData, setPasswordData] = useState({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+    });
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -48,7 +54,15 @@ const Profile: React.FC = () => {
             [name]: value,
         });
     };
-
+    React.useEffect(() => {
+        if (isEditing && profileData) {
+            setFormData({
+                name: profileData.name || '',
+                username: profileData.username || '',
+                email: profileData.email || '',
+            });
+        }
+    }, [isEditing, profileData]);
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!authUser) return;
@@ -57,7 +71,10 @@ const Profile: React.FC = () => {
             setError('');
             setSuccessMessage('');
 
-            const updatedProfile = await updateUserProfile(authUser.token, formData);
+            await updateUserMutation.mutateAsync({
+                token: authUser.token,
+                profileData: formData
+            })
             setIsEditing(false);
             setSuccessMessage('Profile updated successfully!');
 
@@ -65,10 +82,38 @@ const Profile: React.FC = () => {
             setTimeout(() => {
                 setSuccessMessage('');
             }, 3000);
-        } catch (err) {
-            console.error('Error updating profile:', err);
-            setError('Failed to update profile. Please try again.');
+        } catch (err : any) {
+            setError(err.response?.data?.message || 'An error occurred while updating profile');
         }
+    };
+
+    const handlePasswordChange = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+            setError("New passwords don't match");
+            return;
+        }
+        // TODO: Implement password change API call
+        try {
+            setError('');
+            setSuccessMessage('');
+
+            await changePasswordMutation.mutateAsync({
+                token: authUser?.token || '',
+                oldPassword: passwordData.currentPassword,
+                newPassword: passwordData.newPassword
+            });
+            setShowPasswordModal(false);
+            setSuccessMessage('Password changed successfully!');
+
+            // Clear success message after 3 seconds
+            setTimeout(() => {
+                setSuccessMessage('');
+            }, 3000);
+        } catch (err : any) {
+            setError(err.response?.data?.message || 'An error occurred while changing password');
+        }
+        setShowPasswordModal(false);
     };
 
     if (profileError) {
@@ -181,8 +226,8 @@ const Profile: React.FC = () => {
                                             onClick={() => setIsEditing(true)}
                                             className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 transition-colors"
                                         >
-                                            {/* <Edit2 size={16} /> */}
-                                            {/* <span>Edit Profile</span> */}
+                                            <Edit2 size={16} />
+                                            <span>Edit Profile</span>
                                         </button>
                                     ) : (
                                         <button
@@ -312,6 +357,87 @@ const Profile: React.FC = () => {
                                         </div>
                                     </div>
                                 </div>
+
+                                <div className="mt-8 pt-6 border-t">
+                                    <h2 className="text-xl font-semibold text-red-600 mb-4">Danger Zone</h2>
+                                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                                        <h3 className="text-lg font-medium text-red-800 mb-2">Change Password</h3>
+                                        <p className="text-red-600 mb-4">Make sure to use a strong password that you haven't used before.</p>
+                                        <button
+                                            onClick={() => setShowPasswordModal(true)}
+                                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                                        >
+                                            Change Password
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Password Change Modal */}
+                                {showPasswordModal && (
+                                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                                        <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                                            <h2 className="text-xl font-semibold mb-4">Change Password</h2>
+                                            <form onSubmit={handlePasswordChange}>
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                                                            Current Password
+                                                        </label>
+                                                        <input
+                                                            type="password"
+                                                            id="currentPassword"
+                                                            value={passwordData.currentPassword}
+                                                            onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
+                                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                            required
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                                                            New Password
+                                                        </label>
+                                                        <input
+                                                            type="password"
+                                                            id="newPassword"
+                                                            value={passwordData.newPassword}
+                                                            onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                            required
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                                                            Confirm New Password
+                                                        </label>
+                                                        <input
+                                                            type="password"
+                                                            id="confirmPassword"
+                                                            value={passwordData.confirmPassword}
+                                                            onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                            required
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="mt-6 flex justify-end gap-3">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowPasswordModal(false)}
+                                                        className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                    <button
+                                                        type="submit"
+                                                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                                                    >
+                                                        Change Password
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <div>
@@ -331,7 +457,7 @@ const Profile: React.FC = () => {
                                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                                                     <div>
                                                         <ul className="list-disc pl-4">
-                                                            {activity.description.map((desc: string, index: number) => (
+                                                            {Array.isArray(activity.description) &&  activity.description.map((desc: string, index: number) => (
                                                                 <li key={index} className="text-gray-700">{desc}</li>
                                                             ))}
                                                         </ul>
