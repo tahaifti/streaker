@@ -1,25 +1,33 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchStreaks, fetchLongestStreak, fetchAllActivities, addActivity, fetchUserProfile, updateUserProfile, changePassword } from '../utils/api'
 
+// Query keys
+export const queryKeys = {
+  streaks: 'streaks',
+  longestStreak: 'longest-streak',
+  activities: 'activities',
+  allActivities: 'all-activities',
+}
+
 export function useStreaks(token: string) {
   return useQuery({
-    queryKey: ['streaks'],
+    queryKey: [queryKeys.streaks, token],
     queryFn: () => fetchStreaks(token),
-    enabled: !!token
+    enabled: !!token,
   })
 }
 
 export function useLongestStreak(token: string) {
   return useQuery({
-    queryKey: ['longestStreak'],
+    queryKey: [queryKeys.longestStreak, token],
     queryFn: () => fetchLongestStreak(token),
-    enabled: !!token
+    enabled: !!token,
   })
 }
 
 export function useAllActivities(token : string, page : number, limit : number) {
     return useQuery({
-        queryKey: ['allActivities', page, limit],
+        queryKey: [queryKeys.allActivities, token],
         queryFn: () => fetchAllActivities(token, page, limit),
         enabled: !!token,
         placeholderData: (previousData) => previousData
@@ -28,7 +36,7 @@ export function useAllActivities(token : string, page : number, limit : number) 
 
 export function useActivities(token: string, page: number, limit: number) {
   return useQuery({
-    queryKey: ['activities', page, limit],
+    queryKey: [queryKeys.activities, token, page, limit],
     queryFn: () => fetchAllActivities(token, page, limit),
     enabled: !!token,
     placeholderData: (previousData) => previousData
@@ -43,9 +51,10 @@ export function useAddActivity() {
       addActivity(token, description),
     onSuccess: () => {
       // Invalidate and refetch relevant queries
-      queryClient.invalidateQueries({ queryKey: ['allActivities'] })
-      queryClient.invalidateQueries({ queryKey: ['activities'] })
-      queryClient.invalidateQueries({ queryKey: ['streaks'] })
+      queryClient.invalidateQueries({ queryKey: [queryKeys.activities] })
+      queryClient.invalidateQueries({ queryKey: [queryKeys.allActivities] })
+      queryClient.invalidateQueries({ queryKey: [queryKeys.streaks] })
+      queryClient.invalidateQueries({ queryKey: [queryKeys.longestStreak] })
     }
   })
 }
