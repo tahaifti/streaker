@@ -30,4 +30,18 @@ export class UserController {
         const users = await this.userService.getAllUsers();
         return c.json(users);
     }
+
+    async updateUserProfile(c: Context) {
+        const {id : userId} = c.get('jwtPayload');
+        const {name, username, email} = await c.req.json();
+        const user = await this.userService.updateUserProfile(userId, name, username, email);
+        return c.json(user);
+    }
+
+    async changePassword(c : Context){
+        const {id : userId} = c.get('jwtPayload');
+        const {oldPassword, newPassword} = await c.req.json();
+        const user = await this.userService.changePassword(userId, oldPassword, newPassword);
+        return c.json(user);
+    }
 }
