@@ -2,6 +2,7 @@ import axios from "axios";
 
 const AUTH_BASE_URL = import.meta.env.VITE_LOCAL_AUTH_BASE_URL;
 const API_BASE_URL = import.meta.env.VITE_LOCAL_API_ACTIVITY_BASE_URL;
+const USER_API_BASE_URL = import.meta.env.VITE_LOCAL_API_USER_BASE_URL;
 
 const auth_api = axios.create({
     baseURL: AUTH_BASE_URL,
@@ -10,12 +11,19 @@ const auth_api = axios.create({
     }
 });
 
-const api = axios.create({
+const activity_api = axios.create({
     baseURL: API_BASE_URL,
     headers: {
         "Content-type": "application/json"
     }
 });
+
+const user_api = axios.create({
+    baseURL: USER_API_BASE_URL,
+    headers: {
+        "Content-type": "application/json"
+    }
+})
 
 const registerUser = async (userData: any) => {
     try {
@@ -36,7 +44,7 @@ const loginUser = async (userData: any) => {
 };
 
 const fetchStreaks = async (token: string) => {
-    const response = await api.get('/streak', {
+    const response = await activity_api.get('/streak', {
         headers: {
             Authorization: `Bearer ${token}`,
         },
@@ -46,7 +54,7 @@ const fetchStreaks = async (token: string) => {
 };
 
 const fetchLongestStreak = async (token: string) => {
-    const response = await api.get('/longest-streak', {
+    const response = await activity_api.get('/longest-streak', {
         headers: {
             Authorization: `Bearer ${token}`,
         },
@@ -56,7 +64,7 @@ const fetchLongestStreak = async (token: string) => {
 }
 
 const fetchActivities = async (token: string) => {
-    const response = await api.get('/activities', {
+    const response = await activity_api.get('/activities', {
         headers: {
             Authorization: `Bearer ${token}`,
         },
@@ -66,7 +74,7 @@ const fetchActivities = async (token: string) => {
 
 const fetchAllActivities = async (token : string, page : number, limit : number) => {
     try {
-        const response = await api.get('/all', {
+        const response = await activity_api.get('/all', {
             headers : {
                 Authorization : `Bearer ${token}`
             }, 
@@ -85,7 +93,7 @@ const fetchAllActivities = async (token : string, page : number, limit : number)
 
 const addActivity = async (token: string, description: string) => {
     // console.log(`Adding activity: ${description}`);
-    const response = await api.post('/activities', {
+    const response = await activity_api.post('/activities', {
         date: new Date().toISOString(),
         description: description,
     }, {
@@ -98,4 +106,70 @@ const addActivity = async (token: string, description: string) => {
     return response;
 }
 
-export { registerUser, loginUser, fetchStreaks, fetchLongestStreak, fetchActivities, fetchAllActivities, addActivity };
+
+// dummy 
+
+// Fetch user profile
+ const fetchUserProfile = async (token: string) => {
+    try {
+        const response = await user_api.get('/profile', {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept' : 'application/json'
+            },
+        });
+        // console.log('User profile:', response.data);
+        return response.data;
+    } catch (error : any) {
+        console.error('Error fetching user profile:', error.response || error);
+        throw new Error(error.response?.data?.message || 'Failed to fetch user profile');
+    }
+};
+
+// Update user profile
+ const updateUserProfile = async (token: string, profileData: any): Promise<any> => {
+    try {
+        const response = await user_api.post('/update', profileData, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept' : 'application/json'
+            }
+        });
+        return response.data;
+    } catch (error : any) {
+        console.error('Error updating user profile:', error.response || error);
+        throw new Error(error.response?.data?.message || 'Failed to update user profile');
+    }
+};
+
+// Change user password
+const changePassword = async (token: string, oldPassword: string, newPassword: string) => {
+    try {
+        const response = await user_api.post('/change-password', {
+            oldPassword,
+            newPassword
+        }, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept' : 'application/json'
+            }
+        });
+        return response.data;
+    } catch (error : any) {
+        console.error('Error changing password:', error.response || error);
+        throw new Error(error.response?.data?.message || 'Failed to change password');
+    }
+}
+
+export { 
+    registerUser, 
+    loginUser, 
+    fetchStreaks, 
+    fetchLongestStreak, 
+    fetchActivities, 
+    fetchAllActivities, 
+    addActivity, 
+    fetchUserProfile, 
+    updateUserProfile, 
+    changePassword
+};

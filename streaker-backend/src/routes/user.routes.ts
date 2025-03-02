@@ -53,3 +53,23 @@ userRouter.get('/', (c) => {
     const userController = new UserController(userService);
     return userController.getAllUsers(c)
 })
+
+// POST api/users/update - Update user profile
+userRouter.post('/update', (c) => {
+    const prisma = new PrismaClient({
+        datasourceUrl: c.env?.DATABASE_URL
+    }).$extends(withAccelerate());
+    const userService = new UserService(prisma);
+    const userController = new UserController(userService);
+    return userController.updateUserProfile(c);
+})
+
+// POST api/users/change-password - Change user password
+userRouter.post('/change-password', (c) => {
+    const prisma = new PrismaClient({
+        datasourceUrl: c.env?.DATABASE_URL
+    }).$extends(withAccelerate());
+    const userService = new UserService(prisma);
+    const userController = new UserController(userService);
+    return userController.changePassword(c);
+})
