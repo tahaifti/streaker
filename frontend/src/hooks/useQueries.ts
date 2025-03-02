@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { fetchStreaks, fetchLongestStreak, fetchAllActivities, addActivity, fetchUserProfile } from '../utils/api'
+import { fetchStreaks, fetchLongestStreak, fetchAllActivities, addActivity, fetchUserProfile, updateUserProfile, changePassword } from '../utils/api'
 
 export function useStreaks(token: string) {
   return useQuery({
@@ -56,5 +56,37 @@ export function useUser(token : string) {
         queryFn : () => fetchUserProfile(token),
         enabled : !!token,
         placeholderData : (previousData) => previousData
+    })
+}
+
+interface profileDataType {
+    name : string,
+    username : string,
+    email : string
+}
+
+export function useUpdateUser(){
+    const queryClient = useQueryClient()
+    
+    return useMutation({
+        mutationFn : ({token, profileData} : {token : string, profileData : profileDataType}) => {
+            return updateUserProfile(token, profileData)
+        },
+        onSuccess : () => {
+            queryClient.invalidateQueries({queryKey : ['user']})
+        }
+    })
+}
+
+export function useChangePassword(){
+    const queryClient = useQueryClient()
+    
+    return useMutation({
+        mutationFn : ({token, oldPassword, newPassword} : {token : string, oldPassword : string, newPassword : string}) => {
+            return changePassword(token, oldPassword, newPassword)
+        },
+        onSuccess : () => {
+            queryClient.invalidateQueries({queryKey : ['user']})
+        }
     })
 }
