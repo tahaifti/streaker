@@ -1,5 +1,6 @@
 import { Context } from "hono";
 import { ActivityService } from "../services/activity.service";
+import { createActivitySchema } from "@ifti_taha/streaker-common";
 
 export class ActivityController {
     constructor(private activityService: ActivityService) { }
@@ -8,6 +9,12 @@ export class ActivityController {
     async saveActivity(c: Context) {
         const { id: userId } = c.get('jwtPayload');
         const body = await c.req.json();
+
+        // Validate request body
+        const { success } = createActivitySchema.safeParse(body);
+        if (!success) {
+            return c.json({ error: 'Invalid request body' }, 400);
+        }
         
         // Create Date object and reset time to midnight UTC
         const activityDate = new Date(body.date);
