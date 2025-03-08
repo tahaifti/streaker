@@ -3,23 +3,15 @@ import { Link, useNavigate } from 'react-router-dom';
 import { UserPlus } from 'lucide-react';
 import { registerUser } from '../utils/api';
 import { useAuth } from '../utils/auth';
+import { CreateUserInput } from '@ifti_taha/streaker-common';
 
-
-interface RegisterFormData {
-    name: string;
-    username: string;
-    email: string;
-    password: string;
-    confirmPassword: string;
-}
 
 const Register: React.FC = () => {
-    const [formData, setFormData] = useState<RegisterFormData>({
+    const [formData, setFormData] = useState<CreateUserInput>({
         name: '',
         username: '',
         email: '',
         password: '',
-        confirmPassword: '',
     });
 
     const navigate = useNavigate();
@@ -39,17 +31,12 @@ const Register: React.FC = () => {
         setError('');
         setLoading(true);
 
-        if(formData.name === '' || formData.username === '' || formData.email === '' || formData.password === '' || formData.confirmPassword === '') {
+        if(formData.name === '' || formData.username === '' || formData.email === '' || formData.password === '') {
             setError('Please fill in all fields');
             setLoading(false);
             return;
         }
 
-        if (formData.password !== formData.confirmPassword) {
-            setError('Passwords do not match');
-            setLoading(false);
-            return;
-        }
         try {
             const result = await registerUser(formData);
             // console.log(result);
@@ -187,7 +174,7 @@ const Register: React.FC = () => {
                             </div>
                         </div>
 
-                        <div>
+                        {/* <div>
                             <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
                                 Confirm Password
                             </label>
@@ -204,7 +191,7 @@ const Register: React.FC = () => {
                                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                 />
                             </div>
-                        </div>
+                        </div> */}
 
                         <div>
                             <button

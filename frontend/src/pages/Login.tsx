@@ -3,11 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
 import { loginUser } from '../utils/api';
 import { useAuth } from '../utils/auth';
+import { LoginInput } from '@ifti_taha/streaker-common';
 
-interface LoginFormData {
-    email: string;
-    password: string;
-}
 
 const Login: React.FC = () => {
     const { login, authUser  } = useAuth();
@@ -20,7 +17,7 @@ const Login: React.FC = () => {
         }
     }, [authUser, navigate]);
 
-    const [formData, setFormData] = useState<LoginFormData>({
+    const [formData, setFormData] = useState<LoginInput>({
         email: '',
         password: '',
     });
