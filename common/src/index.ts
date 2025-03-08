@@ -28,6 +28,11 @@ export const createUserSchema = z.object({
     password: userSchema.shape.password,
 });
 
+export const loginSchema = z.object({
+    email: userSchema.shape.email,
+    password: userSchema.shape.password,
+})
+
 export const updateUserSchema = createUserSchema.partial();
 
 export const createActivitySchema = z.object({
