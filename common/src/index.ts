@@ -50,6 +50,7 @@ export const activityResponseSchema = activitySchema;
 export type User = z.infer<typeof userSchema>;
 export type UserResponse = z.infer<typeof userResponseSchema>;
 export type CreateUserInput = z.infer<typeof createUserSchema>;
+export type LoginInput = z.infer<typeof loginSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 export type Activity = z.infer<typeof activitySchema>;
 export type CreateActivityInput = z.infer<typeof createActivitySchema>;
