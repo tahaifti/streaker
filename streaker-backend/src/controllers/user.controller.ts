@@ -1,5 +1,6 @@
 import { Context } from "hono";
 import { UserService } from "../services/user.service";
+import { updateUserSchema } from "@ifti_taha/streaker-common";
 
 export class UserController {
     constructor (private userService: UserService) { }
@@ -33,7 +34,13 @@ export class UserController {
 
     async updateUserProfile(c: Context) {
         const {id : userId} = c.get('jwtPayload');
-        const {name, username, email} = await c.req.json();
+        const body = await c.req.json();
+        const { success } = updateUserSchema.safeParse(body);
+        if (!success) {
+            c.status(400);
+            return c.json({ message: 'Invalid request body' });
+        }
+        const { name, username, email } = body;
         const user = await this.userService.updateUserProfile(userId, name, username, email);
         return c.json(user);
     }
