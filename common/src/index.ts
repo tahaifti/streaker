@@ -1,22 +1,38 @@
 import z from 'zod';
 
 export const userSchema = z.object({
-    id: z.string().uuid(),
-    name: z.string().min(2).max(50),
-    username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_-]+$/),
-    email: z.string().email(),
-    password: z.string().min(8),
-    current_streak: z.number().int().min(0),
-    longest_streak: z.number().int().min(0),
+    id: z.string().uuid({ message: 'Invalid user ID format' }),
+    name: z.string()
+        .min(2, { message: 'Name must be at least 2 characters long' })
+        .max(50, { message: 'Name cannot exceed 50 characters' }),
+    username: z.string()
+        .min(3, { message: 'Username must be at least 3 characters long' })
+        .max(30, { message: 'Username cannot exceed 30 characters' })
+        .regex(/^[a-zA-Z0-9_-]+$/, { 
+            message: 'Username can only contain letters, numbers, underscores, and hyphens' 
+        }),
+    email: z.string().email({ message: 'Please enter a valid email address' }),
+    password: z.string()
+        .min(8, { message: 'Password must be at least 8 characters long' })
+        .regex(/[A-Z]/, { message: 'Password must contain at least one uppercase letter' })
+        .regex(/[a-z]/, { message: 'Password must contain at least one lowercase letter' })
+        .regex(/[0-9]/, { message: 'Password must contain at least one number' }),
+    current_streak: z.number().int().min(0, { message: 'Streak cannot be negative' }),
+    longest_streak: z.number().int().min(0, { message: 'Streak cannot be negative' }),
     createdAt: z.date(),
     updatedAt: z.date()
 });
 
 export const activitySchema = z.object({
-    id: z.string().uuid(),
-    date: z.date(),
-    description: z.array(z.string()),
-    userId: z.string().uuid(),
+    id: z.string().uuid({ message: 'Invalid activity ID format' }),
+    date: z.date({ 
+        required_error: 'Date is required',
+        invalid_type_error: 'Invalid date format' 
+    }),
+    description: z.array(z.string())
+        .min(1, { message: 'At least one description is required' })
+        .max(10, { message: 'Cannot add more than 10 descriptions' }),
+    userId: z.string().uuid({ message: 'Invalid user ID format' }),
     createdAt: z.date(),
     updatedAt: z.date()
 });
