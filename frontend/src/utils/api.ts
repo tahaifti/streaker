@@ -1,3 +1,4 @@
+import { CreateUserInput, LoginInput } from "@ifti_taha/streaker-common";
 import axios from "axios";
 
 const AUTH_BASE_URL = import.meta.env.VITE_LOCAL_AUTH_BASE_URL;
@@ -25,21 +26,60 @@ const user_api = axios.create({
     }
 })
 
-const registerUser = async (userData: any) => {
+const registerUser = async (userData: CreateUserInput) => {
     try {
         const response = await auth_api.post("/register", userData);
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response?.data?.message || "Error in registering user");
+        // First check for message in error.response.data.message
+        if (error.response?.data?.message) {
+            throw new Error(error.response.data.message);
+        }
+        // Then check for error in error.response.data.error
+        else if (error.response?.data?.error) {
+            throw new Error(error.response.data.error);
+        }
+        // Check for direct message string in response data
+        else if (typeof error.response?.data === 'string') {
+            throw new Error(error.response.data);
+        }
+        // Check for direct message in network response
+        else if (error.response?.statusText) {
+            throw new Error(error.response.statusText);
+        }
+        // If we still can't find the message, log the entire error and use fallback
+        else {
+            console.error("Registration error:", error);
+            throw new Error("Unable to register user. Please try again later.");
+        }
     }
 };
 
-const loginUser = async (userData: any) => {
+const loginUser = async (userData: LoginInput) => {
     try {
         const response = await auth_api.post("/login", userData);
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response?.data?.message || "Error in logging in user");
+        if (error.response?.data?.message) {
+            throw new Error(error.response.data.message);
+        }
+        // Then check for error in error.response.data.error
+        else if (error.response?.data?.error) {
+            throw new Error(error.response.data.error);
+        }
+        // Check for direct message string in response data
+        else if (typeof error.response?.data === 'string') {
+            throw new Error(error.response.data);
+        }
+        // Check for direct message in network response
+        else if (error.response?.statusText) {
+            throw new Error(error.response.statusText);
+        }
+        // If we still can't find the message, log the entire error and use fallback
+        else {
+            console.error("Login error:", error);
+            throw new Error("Unable to Login user. Please try again later.");
+        }
     }
 };
 
