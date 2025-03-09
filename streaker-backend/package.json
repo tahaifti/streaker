@@ -5,7 +5,7 @@
     "deploy": "wrangler deploy --minify"
   },
   "dependencies": {
-    "@ifti_taha/streaker-common": "^1.0.6",
+    "@ifti_taha/streaker-common": "^1.0.8",
     "@prisma/client": "^6.3.1",
     "@prisma/extension-accelerate": "^1.2.2",
     "@types/bcryptjs": "^2.4.6",
