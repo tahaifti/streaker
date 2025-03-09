@@ -25,13 +25,8 @@ export const userSchema = z.object({
 
 export const activitySchema = z.object({
     id: z.string().uuid({ message: 'Invalid activity ID format' }),
-    date: z.date({ 
-        required_error: 'Date is required',
-        invalid_type_error: 'Invalid date format' 
-    }),
-    description: z.array(z.string())
-        .min(1, { message: 'At least one description is required' })
-        .max(10, { message: 'Cannot add more than 10 descriptions' }),
+    date: z.string().datetime().transform((val) => new Date(val)),
+    description: z.string({ required_error: 'Description is required' }),
     userId: z.string().uuid({ message: 'Invalid user ID format' }),
     createdAt: z.date(),
     updatedAt: z.date()
