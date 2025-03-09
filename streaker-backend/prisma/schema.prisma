@@ -43,9 +43,10 @@ model Activity {
 
 model Feedback {
   id        String   @id @default(uuid())
+  type      String   @default("feedback")
   message   String
-  email     String  @default("")
-  resolved  Boolean @default(false)
+  email     String   @default("")
+  resolved  Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

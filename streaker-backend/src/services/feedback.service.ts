@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client/edge";
 export class FeedbackService {
     constructor(private db: PrismaClient | any) { }
 
-    async submitFeedback(message: string, email: string = "") {
+    async submitFeedback(type : string, message: string, email: string = "") {
         if (!message) {
             throw new Error('Message is required');
         }
@@ -11,6 +11,7 @@ export class FeedbackService {
         try {
             const feedbackData = await this.db.feedback.create({
                 data: {
+                    type,
                     message,
                     email
                 }

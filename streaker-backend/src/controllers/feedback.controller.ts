@@ -6,8 +6,8 @@ export class FeedbackController {
 
     async submitFeedback(c: Context) {
         try {
-            const { message, email } = await c.req.json();
-            const feedbackData = await this.feedbackService.submitFeedback(message, email);
+            const { type, message, email } = await c.req.json();
+            const feedbackData = await this.feedbackService.submitFeedback(type, message, email);
             return c.json({
                 success: true,
                 data: feedbackData
