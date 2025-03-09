@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Flame, LogOut, MessageCircle, User } from 'lucide-react';
 import { useAuth } from '../utils/auth';
-// import FeedbackForm from './FeedbackForm';
+import FeedbackForm from './FeedbackForm';
 
 const Header: React.FC = () => {
     const { authUser, logout } = useAuth();
@@ -21,13 +21,13 @@ const Header: React.FC = () => {
                     </div>
                     <div className="flex items-center sm:space-x-4">
                         {/* Feedback Button */}
-                        {/* <button
+                        <button
                             onClick={() => setIsFeedbackOpen(true)}
                             className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-gray-900"
                         >
                             <MessageCircle className="h-5 w-5" />
                             <span className="hidden sm:inline">Feedback</span>
-                        </button> */}
+                        </button>
 
                         {/* auth buttons */}
                         {authUser ? (
@@ -69,10 +69,10 @@ const Header: React.FC = () => {
                 </div>
             </div>
 
-            {/* <FeedbackForm
+            <FeedbackForm
                 isOpen={isFeedbackOpen}
                 onClose={() => setIsFeedbackOpen(false)}
-            /> */}
+            />
         </header>
     );
 };
