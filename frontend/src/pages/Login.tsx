@@ -35,14 +35,18 @@ const Login: React.FC = () => {
             // Validate form data using Zod schema
             loginSchema.parse(formData);
 
-            const result = await loginUser(formData);
-            if (result?.token) {
-                login(result.user, result.token);
-                navigate('/home');
-            } else {
-                // Improved error handling
-                setError(result?.message || 'Invalid email or password');
+            const response = await loginUser(formData);
+            
+            // Check if the response is an error
+            if (response.error || !response.token) {
+                setError(response.error || response.message || 'Invalid email or password');
+                return;
             }
+
+            // Success case
+            login(response.user, response.token);
+            navigate('/home');
+
         } catch (error: any) {
             // Handle both validation errors and API errors
             if (error.errors) {
@@ -55,8 +59,11 @@ const Login: React.FC = () => {
                     }
                 });
                 setValidationErrors(errors);
+            } else if (error.response?.data) {
+                // API error with response data
+                setError(error.response.data.message || 'An error occurred during login');
             } else {
-                // API or other errors
+                // Generic error
                 setError(error.message || 'An error occurred during login');
             }
         } finally {
@@ -80,6 +87,12 @@ const Login: React.FC = () => {
                 <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
                     Sign in to your account
                 </h2>
+                <p className="mt-2 text-center text-sm text-gray-600">
+                    Or{' '}
+                    <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200">
+                        create a new account
+                    </Link>
+                </p>
                 {error && (
                     <div className="mt-2 bg-red-50 border-l-4 border-red-500 text-red-700 p-3 rounded shadow-sm mx-auto max-w-sm" role="alert">
                         <div className="flex">
@@ -92,12 +105,6 @@ const Login: React.FC = () => {
                         </div>
                     </div>
                 )}
-                <p className="mt-2 text-center text-sm text-gray-600">
-                    Or{' '}
-                    <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200">
-                        create a new account
-                    </Link>
-                </p>
             </div>
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
