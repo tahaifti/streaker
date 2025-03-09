@@ -40,18 +40,25 @@ const Login: React.FC = () => {
                 login(result.user, result.token);
                 navigate('/home');
             } else {
-                setError(result?.message || 'Login failed');
+                // Improved error handling
+                setError(result?.message || 'Invalid email or password');
             }
         } catch (error: any) {
-            const errors: Record<string, string> = {};
-            error.errors.forEach((err : any) => {
-                if (err.path) {
-                    // Extract the field name and error message
-                    const fieldName = err.path[0];
-                    errors[fieldName] = err.message;
-                }
-            });
-            setValidationErrors(errors);
+            // Handle both validation errors and API errors
+            if (error.errors) {
+                // Zod validation errors
+                const errors: Record<string, string> = {};
+                error.errors.forEach((err: any) => {
+                    if (err.path) {
+                        const fieldName = err.path[0];
+                        errors[fieldName] = err.message;
+                    }
+                });
+                setValidationErrors(errors);
+            } else {
+                // API or other errors
+                setError(error.message || 'An error occurred during login');
+            }
         } finally {
             setLoading(false);
         }
