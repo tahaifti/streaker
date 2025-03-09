@@ -7,15 +7,14 @@ export class ActivityService {
 
     async saveActivity(date: Date, description: string, userId: string) {
         try {
-            // console.log(`userId: ${userId}, date: ${date}, description: ${description}`);
             const activityDate = new Date(date);
             activityDate.setUTCHours(0, 0, 0, 0);
 
             if (this.db.$cache) {
                 const cacheKeyPatterns = [
-                    `activity:findMany:${userId}`,
-                    `user:${userId}`,
-                    `streak:${userId}`
+                    `activity:findMany:${userId}:*`, // Invalidate all activity queries for the user
+                    `user:${userId}`, // Invalidate user cache
+                    `streak:${userId}`, // Invalidate streak cache
                 ];
 
                 for (const pattern of cacheKeyPatterns) {
@@ -25,7 +24,7 @@ export class ActivityService {
 
             const activity = await this.db.activity.upsert({
                 where: {
-                    userId_date: {  // Using the compound unique constraint
+                    userId_date: {
                         userId,
                         date: activityDate,
                     }
@@ -40,12 +39,12 @@ export class ActivityService {
                     date: activityDate,
                     description: [description],
                 },
-                // Skip cache for this operation to ensure fresh data
-                cacheStrategy: { skip: true }
+                cacheStrategy: { skip: true } // Skip cache for this operation
             });
+
             // Update streaks after saving activity
-            const current_streak = await this.getCurrentStreak(userId);
-            const longest_streak = await this.getLongestStreak(userId);
+            const current_streak = await this.getCurrentStreak(userId, true); // Skip cache for fresh data
+            const longest_streak = await this.getLongestStreak(userId, true); // Skip cache for fresh data
 
             await this.db.user.update({
                 where: { id: userId },
@@ -55,6 +54,7 @@ export class ActivityService {
                 },
                 cacheStrategy: { skip: true } // Skip cache for update operation
             });
+
             return activity;
         } catch (error: any) {
             throw new HTTPException(500, { message: `Failed to save activity: ${error.message}` });
