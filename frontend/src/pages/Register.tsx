@@ -3,8 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { UserPlus } from 'lucide-react';
 import { registerUser } from '../utils/api';
 import { useAuth } from '../utils/auth';
-import { CreateUserInput } from '@ifti_taha/streaker-common';
-
+import { CreateUserInput, createUserSchema } from '@ifti_taha/streaker-common';
 
 const Register: React.FC = () => {
     const [formData, setFormData] = useState<CreateUserInput>({
@@ -18,41 +17,45 @@ const Register: React.FC = () => {
     const { authUser } = useAuth();
 
     useEffect(() => {
-            if (authUser) {
-                navigate('/home');
-            }
-        }, [authUser, navigate]);
- 
+        if (authUser) {
+            navigate('/home');
+        }
+    }, [authUser, navigate]);
+
     const [error, setError] = useState<string>('');
+    const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setValidationErrors({});
         setLoading(true);
 
-        if(formData.name === '' || formData.username === '' || formData.email === '' || formData.password === '') {
-            setError('Please fill in all fields');
-            setLoading(false);
-            return;
-        }
-
         try {
+            // Validate form data using Zod schema
+            createUserSchema.parse(formData);
+
             const result = await registerUser(formData);
-            // console.log(result);
-            
-            if(result){
+
+            if (result) {
                 navigate('/login');
-            }else {
+            } else {
                 setError(`Error while Registration - ${result?.message}` || 'An error occurred');
             }
-        } catch (error : any) {
-            console.error('An error occurred:', error);
-            setError((`An error occurred ${error.message}` )|| "Registration failed");
+        } catch (error: any) {
+            const errors: Record<string, string> = {};
+            error.errors.forEach((err: any) => {
+                if (err.path) {
+                    // Extract the field name and error message
+                    const fieldName = err.path[0];
+                    errors[fieldName] = err.message;
+                }
+            });
+            setValidationErrors(errors);
         } finally {
             setLoading(false);
         }
-        // console.log('Registration attempt:', formData);
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,28 +64,37 @@ const Register: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="flex justify-center">
-                    <UserPlus className="w-12 h-12 text-blue-600" />
+                    <div className="p-3 bg-blue-100 rounded-full">
+                        <UserPlus className="w-12 h-12 text-blue-600" />
+                    </div>
                 </div>
                 <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
                     Create your account
                 </h2>
                 <p className="mt-2 text-center text-sm text-gray-600">
                     Already have an account?{' '}
-                    <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
+                    <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200">
                         Sign in
                     </Link>
                 </p>
             </div>
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+                <div className="bg-white py-8 px-4 shadow-lg sm:rounded-xl sm:px-10 border border-gray-100">
                     <form className="space-y-6" onSubmit={handleSubmit}>
                         {error && (
-                            <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                                <span className="block sm:inline">{error}</span>
+                            <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded shadow-sm" role="alert">
+                                <div className="flex">
+                                    <div className="py-1">
+                                        <svg className="h-6 w-6 text-red-500 mr-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <span className="block sm:inline font-medium">{error}</span>
+                                </div>
                             </div>
                         )}
 
@@ -90,7 +102,7 @@ const Register: React.FC = () => {
                             <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                                 Full Name
                             </label>
-                            <div className="mt-1">
+                            <div className="mt-1 relative rounded-md shadow-sm">
                                 <input
                                     id="name"
                                     name="name"
@@ -100,8 +112,16 @@ const Register: React.FC = () => {
                                     required
                                     value={formData.name}
                                     onChange={handleChange}
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                                 />
+                                {validationErrors.name && (
+                                    <p className="mt-1 text-sm text-red-600 flex items-center">
+                                        <svg className="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                        </svg>
+                                        {validationErrors.name}
+                                    </p>
+                                )}
                             </div>
                         </div>
 
@@ -109,7 +129,7 @@ const Register: React.FC = () => {
                             <label htmlFor="username" className="block text-sm font-medium text-gray-700">
                                 Username
                             </label>
-                            <div className="mt-1">
+                            <div className="mt-1 relative rounded-md shadow-sm">
                                 <input
                                     id="username"
                                     name="username"
@@ -128,9 +148,20 @@ const Register: React.FC = () => {
                                         }
                                         handleChange(e);
                                     }}
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                                 />
-                                <p className="mt-1 text-sm text-gray-500">
+                                {validationErrors.username && (
+                                    <p className="mt-1 text-sm text-red-600 flex items-center">
+                                        <svg className="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                        </svg>
+                                        {validationErrors.username}
+                                    </p>
+                                )}
+                                <p className="mt-1 text-sm text-gray-500 flex items-center">
+                                    <svg className="h-4 w-4 mr-1 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zm-1 7a1 1 0 01-1-1v-3a1 1 0 112 0v3a1 1 0 01-1 1z" clipRule="evenodd" />
+                                    </svg>
                                     Please enter a unique username without spaces
                                 </p>
                             </div>
@@ -140,7 +171,7 @@ const Register: React.FC = () => {
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                                 Email address
                             </label>
-                            <div className="mt-1">
+                            <div className="mt-1 relative rounded-md shadow-sm">
                                 <input
                                     id="email"
                                     name="email"
@@ -150,8 +181,16 @@ const Register: React.FC = () => {
                                     required
                                     value={formData.email}
                                     onChange={handleChange}
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                                 />
+                                {validationErrors.email && (
+                                    <p className="mt-1 text-sm text-red-600 flex items-center">
+                                        <svg className="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                        </svg>
+                                        {validationErrors.email}
+                                    </p>
+                                )}
                             </div>
                         </div>
 
@@ -159,7 +198,7 @@ const Register: React.FC = () => {
                             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                                 Password
                             </label>
-                            <div className="mt-1">
+                            <div className="mt-1 relative rounded-md shadow-sm">
                                 <input
                                     id="password"
                                     name="password"
@@ -169,35 +208,24 @@ const Register: React.FC = () => {
                                     required
                                     value={formData.password}
                                     onChange={handleChange}
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                                 />
+                                {validationErrors.password && (
+                                    <p className="mt-1 text-sm text-red-600 flex items-center">
+                                        <svg className="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                        </svg>
+                                        {validationErrors.password}
+                                    </p>
+                                )}
                             </div>
                         </div>
-
-                        {/* <div>
-                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                                Confirm Password
-                            </label>
-                            <div className="mt-1">
-                                <input
-                                    id="confirmPassword"
-                                    name="confirmPassword"
-                                    type="password"
-                                    autoComplete="new-password"
-                                    placeholder='********'
-                                    required
-                                    value={formData.confirmPassword}
-                                    onChange={handleChange}
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                />
-                            </div>
-                        </div> */}
 
                         <div>
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors duration-200 transform hover:scale-105 active:scale-95"
                             >
                                 {loading ? (
                                     <span className="flex items-center">
@@ -209,6 +237,19 @@ const Register: React.FC = () => {
                                     </span>
                                 ) : 'Create Account'}
                             </button>
+                        </div>
+
+                        <div className="mt-4">
+                            <div className="relative">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-gray-300"></div>
+                                </div>
+                                <div className="relative flex justify-center text-sm">
+                                    <span className="px-2 bg-white text-gray-500">
+                                        By signing up, you agree to our Terms and Privacy Policy
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </form>
                 </div>
