@@ -36,23 +36,31 @@ const Register: React.FC = () => {
             // Validate form data using Zod schema
             createUserSchema.parse(formData);
 
-            const result = await registerUser(formData);
-
-            if (result) {
-                navigate('/login');
-            } else {
-                setError(`Error while Registration - ${result?.message}` || 'An error occurred');
+            const response = await registerUser(formData);
+            
+            if (response.error) {
+                setError(response.message || 'Registration failed. Please try again.');
+                return;
             }
+
+            // Success case
+            navigate('/login');
+
         } catch (error: any) {
-            const errors: Record<string, string> = {};
-            error.errors.forEach((err: any) => {
-                if (err.path) {
-                    // Extract the field name and error message
-                    const fieldName = err.path[0];
-                    errors[fieldName] = err.message;
-                }
-            });
-            setValidationErrors(errors);
+            if (error.errors) {
+                // Zod validation errors
+                const errors: Record<string, string> = {};
+                error.errors.forEach((err: any) => {
+                    if (err.path) {
+                        const fieldName = err.path[0];
+                        errors[fieldName] = err.message;
+                    }
+                });
+                setValidationErrors(errors);
+            } else {
+                // API or other errors
+                setError(error.message || 'An error occurred during registration');
+            }
         } finally {
             setLoading(false);
         }
