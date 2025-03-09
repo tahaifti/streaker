@@ -12,7 +12,7 @@ self.addEventListener('install', (event) => {
             .then((cache) => {
                 return cache.addAll(ASSETS_TO_CACHE)
                     .catch(error => {
-                        console.error('Cache addAll error:', error);
+                        // console.error('Cache addAll error:', error);
                         return Promise.reject(error);
                     });
             })
