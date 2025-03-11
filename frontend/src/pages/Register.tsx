@@ -13,6 +13,7 @@ const Register: React.FC = () => {
         password: '',
     });
 
+    const [focusedField, setFocusedField] = useState<string | null>(null);
     const navigate = useNavigate();
     const { authUser } = useAuth();
 
@@ -37,7 +38,7 @@ const Register: React.FC = () => {
             createUserSchema.parse(formData);
 
             const response = await registerUser(formData);
-            
+
             if (response.error) {
                 setError(response.message || 'Registration failed. Please try again.');
                 return;
@@ -71,6 +72,19 @@ const Register: React.FC = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleFocus = (fieldName: string) => {
+        setFocusedField(fieldName);
+    };
+
+    const handleBlur = () => {
+        setFocusedField(null);
+    };
+
+    // Determine if a field should have a floating label
+    const shouldFloat = (fieldName: string) => {
+        return focusedField === fieldName || formData[fieldName as keyof CreateUserInput] !== '';
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -92,12 +106,12 @@ const Register: React.FC = () => {
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="bg-white py-8 px-4 shadow-lg sm:rounded-xl sm:px-10 border border-gray-100">
-                    <form className="space-y-6" onSubmit={handleSubmit}>
+                    <form className="space-y-6" onSubmit={handleSubmit} noValidate>
                         {error && (
                             <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded shadow-sm" role="alert">
                                 <div className="flex">
                                     <div className="py-1">
-                                        <svg className="h-6 w-6 text-red-500 mr-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <svg className="h-6 w-6 text-red-500 mr-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                                         </svg>
                                     </div>
@@ -107,43 +121,60 @@ const Register: React.FC = () => {
                         )}
 
                         <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                                Full Name
-                            </label>
-                            <div className="mt-1 relative rounded-md shadow-sm">
+                            <div className="relative">
+                                <label
+                                    htmlFor="name"
+                                    className={`absolute left-3 transition-all duration-200 pointer-events-none ${shouldFloat('name')
+                                            ? '-top-2 text-xs bg-white px-1 text-blue-600 z-10'
+                                            : 'top-2 text-gray-500'
+                                        }`}
+                                >
+                                    Full Name
+                                </label>
                                 <input
                                     id="name"
                                     name="name"
                                     type="text"
-                                    placeholder='John Doe'
                                     autoComplete="name"
                                     required
                                     value={formData.name}
                                     onChange={handleChange}
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                                    onFocus={() => handleFocus('name')}
+                                    onBlur={handleBlur}
+                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                                    aria-describedby={validationErrors.name ? "name-error" : undefined}
+                                    aria-invalid={!!validationErrors.name}
                                 />
                                 {validationErrors.name && (
-                                    <p className="mt-1 text-sm text-red-600 flex items-center">
-                                        <svg className="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <p className="mt-1 text-sm text-red-600 flex items-center" id="name-error">
+                                        <svg className="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                                         </svg>
                                         {validationErrors.name}
                                     </p>
                                 )}
+                                <p className="mt-1 text-xs text-gray-500">
+                                    Enter your full name as it will appear on your profile
+                                </p>
                             </div>
                         </div>
 
                         <div>
-                            <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                                Username
-                            </label>
-                            <div className="mt-1 relative rounded-md shadow-sm">
+                            <div className="relative">
+                                <label
+                                    htmlFor="username"
+                                    className={`absolute left-3 transition-all duration-200 pointer-events-none ${shouldFloat('username')
+                                            ? '-top-2 text-xs bg-white px-1 text-blue-600 z-10'
+                                            : 'top-2 text-gray-500'
+                                        }`}
+                                >
+                                    Username
+                                </label>
                                 <input
                                     id="username"
                                     name="username"
                                     type="text"
                                     autoComplete="username"
-                                    placeholder='dexter@ifti'
                                     required
                                     pattern="^\S*$"
                                     title="Username must not contain spaces"
@@ -156,76 +187,104 @@ const Register: React.FC = () => {
                                         }
                                         handleChange(e);
                                     }}
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                                    onFocus={() => handleFocus('username')}
+                                    onBlur={handleBlur}
+                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                                    aria-describedby="username-hint"
+                                    aria-invalid={!!validationErrors.username}
                                 />
                                 {validationErrors.username && (
-                                    <p className="mt-1 text-sm text-red-600 flex items-center">
-                                        <svg className="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <p className="mt-1 text-sm text-red-600 flex items-center" id="username-error">
+                                        <svg className="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                                         </svg>
                                         {validationErrors.username}
                                     </p>
                                 )}
-                                <p className="mt-1 text-sm text-gray-500 flex items-center">
-                                    <svg className="h-4 w-4 mr-1 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <p className="mt-1 text-xs text-gray-500 flex items-center" id="username-hint">
+                                    <svg className="h-4 w-4 mr-1 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zm-1 7a1 1 0 01-1-1v-3a1 1 0 112 0v3a1 1 0 01-1 1z" clipRule="evenodd" />
                                     </svg>
-                                    Please enter a unique username without spaces
+                                    Please enter a unique username without spaces (e.g., dexter@ifti)
                                 </p>
                             </div>
                         </div>
 
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                Email address
-                            </label>
-                            <div className="mt-1 relative rounded-md shadow-sm">
+                            <div className="relative">
+                                <label
+                                    htmlFor="email"
+                                    className={`absolute left-3 transition-all duration-200 pointer-events-none ${shouldFloat('email')
+                                            ? '-top-2 text-xs bg-white px-1 text-blue-600 z-10'
+                                            : 'top-2 text-gray-500'
+                                        }`}
+                                >
+                                    Email address
+                                </label>
                                 <input
                                     id="email"
                                     name="email"
                                     type="email"
                                     autoComplete="email"
-                                    placeholder='dexterifti@streaker.com'
                                     required
                                     value={formData.email}
                                     onChange={handleChange}
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                                    onFocus={() => handleFocus('email')}
+                                    onBlur={handleBlur}
+                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                                    aria-describedby={validationErrors.email ? "email-error" : "email-hint"}
+                                    aria-invalid={!!validationErrors.email}
                                 />
                                 {validationErrors.email && (
-                                    <p className="mt-1 text-sm text-red-600 flex items-center">
-                                        <svg className="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <p className="mt-1 text-sm text-red-600 flex items-center" id="email-error">
+                                        <svg className="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                                         </svg>
                                         {validationErrors.email}
                                     </p>
                                 )}
+                                <p className="mt-1 text-xs text-gray-500" id="email-hint">
+                                    We'll never share your email with anyone else
+                                </p>
                             </div>
                         </div>
 
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                                Password
-                            </label>
-                            <div className="mt-1 relative rounded-md shadow-sm">
+                            <div className="relative">
+                                <label
+                                    htmlFor="password"
+                                    className={`absolute left-3 transition-all duration-200 pointer-events-none ${shouldFloat('password')
+                                            ? '-top-2 text-xs bg-white px-1 text-blue-600 z-10'
+                                            : 'top-2 text-gray-500'
+                                        }`}
+                                >
+                                    Password
+                                </label>
                                 <input
                                     id="password"
                                     name="password"
                                     type="password"
                                     autoComplete="new-password"
-                                    placeholder='********'
                                     required
                                     value={formData.password}
                                     onChange={handleChange}
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                                    onFocus={() => handleFocus('password')}
+                                    onBlur={handleBlur}
+                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                                    aria-describedby={validationErrors.password ? "password-error" : "password-hint"}
+                                    aria-invalid={!!validationErrors.password}
                                 />
                                 {validationErrors.password && (
-                                    <p className="mt-1 text-sm text-red-600 flex items-center">
-                                        <svg className="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <p className="mt-1 text-sm text-red-600 flex items-center" id="password-error">
+                                        <svg className="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                                         </svg>
                                         {validationErrors.password}
                                     </p>
                                 )}
+                                <p className="mt-1 text-xs text-gray-500" id="password-hint">
+                                    Password should be at least 8 characters and include letters and numbers
+                                </p>
                             </div>
                         </div>
 
@@ -234,10 +293,11 @@ const Register: React.FC = () => {
                                 type="submit"
                                 disabled={loading}
                                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors duration-200 transform hover:scale-105 active:scale-95"
+                                aria-live="polite"
                             >
                                 {loading ? (
                                     <span className="flex items-center">
-                                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                         </svg>
