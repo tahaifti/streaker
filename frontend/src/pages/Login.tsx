@@ -8,6 +8,7 @@ import { LoginInput, loginSchema } from '@ifti_taha/streaker-common';
 const Login: React.FC = () => {
     const { login, authUser } = useAuth();
     const navigate = useNavigate();
+    const [focusedField, setFocusedField] = useState<string | null>(null);
 
     // Redirect if user is already logged in
     useEffect(() => {
@@ -76,6 +77,18 @@ const Login: React.FC = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleFocus = (fieldName: string) => {
+        setFocusedField(fieldName);
+    };
+
+    const handleBlur = () => {
+        setFocusedField(null);
+    };
+
+    const shouldFloat = (fieldName: string) => {
+        return focusedField === fieldName || formData[fieldName as keyof LoginInput] !== '';
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -111,23 +124,33 @@ const Login: React.FC = () => {
                 <div className="bg-white py-8 px-4 shadow-lg sm:rounded-xl sm:px-10 border border-gray-100">
                     <form className="space-y-6" onSubmit={handleSubmit}>
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                Email address
-                            </label>
-                            <div className="mt-1 relative rounded-md shadow-sm">
+                            <div className="relative">
+                                <label
+                                    htmlFor="email"
+                                    className={`absolute left-3 transition-all duration-200 pointer-events-none ${
+                                        shouldFloat('email')
+                                            ? '-top-2 text-xs bg-white px-1 text-blue-600 z-10'
+                                            : 'top-2 text-gray-500'
+                                    }`}
+                                >
+                                    Email address
+                                </label>
                                 <input
                                     id="email"
                                     name="email"
                                     type="email"
                                     autoComplete="email"
-                                    placeholder='dexterifti@streaker.com'
                                     required
                                     value={formData.email}
                                     onChange={handleChange}
+                                    onFocus={() => handleFocus('email')}
+                                    onBlur={handleBlur}
                                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                                    aria-describedby={validationErrors.email ? "email-error" : undefined}
+                                    aria-invalid={!!validationErrors.email}
                                 />
                                 {validationErrors.email && (
-                                    <p className="mt-1 text-sm text-red-600 flex items-center">
+                                    <p className="mt-1 text-sm text-red-600 flex items-center" id="email-error">
                                         <svg className="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                                         </svg>
@@ -138,23 +161,33 @@ const Login: React.FC = () => {
                         </div>
 
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                                Password
-                            </label>
-                            <div className="mt-1 relative rounded-md shadow-sm">
+                            <div className="relative">
+                                <label
+                                    htmlFor="password"
+                                    className={`absolute left-3 transition-all duration-200 pointer-events-none ${
+                                        shouldFloat('password')
+                                            ? '-top-2 text-xs bg-white px-1 text-blue-600 z-10'
+                                            : 'top-2 text-gray-500'
+                                    }`}
+                                >
+                                    Password
+                                </label>
                                 <input
                                     id="password"
                                     name="password"
                                     type="password"
                                     autoComplete="current-password"
-                                    placeholder='********'
                                     required
                                     value={formData.password}
                                     onChange={handleChange}
+                                    onFocus={() => handleFocus('password')}
+                                    onBlur={handleBlur}
                                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                                    aria-describedby={validationErrors.password ? "password-error" : undefined}
+                                    aria-invalid={!!validationErrors.password}
                                 />
                                 {validationErrors.password && (
-                                    <p className="mt-1 text-sm text-red-600 flex items-center">
+                                    <p className="mt-1 text-sm text-red-600 flex items-center" id="password-error">
                                         <svg className="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                                         </svg>
@@ -192,6 +225,7 @@ const Login: React.FC = () => {
                                 type="submit"
                                 disabled={loading}
                                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors duration-200 transform hover:scale-105 active:scale-95"
+                                aria-live="polite"
                             >
                                 {loading ? (
                                     <span className="flex items-center">
