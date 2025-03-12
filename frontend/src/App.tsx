@@ -7,6 +7,8 @@ import Footer from './components/Footer';
 import HeatMap from './components/HeatMap';
 import InstallPrompt from './components/InstallPrompt';
 import { useStreaks, useLongestStreak, useActivities, useAllActivities, useAddActivity } from './hooks/useQueries'
+import { toast } from 'react-toastify';
+import { saveActivitiesToStorage, getActivitiesFromStorage } from './utils/storage';
 
 
 function App() {
@@ -20,7 +22,13 @@ function App() {
   const {
     data: allActivitesData,
     isLoading: allActivitiesLoading
-  } = useAllActivities(authUser?.token ?? '', 1, 0);
+  } = useAllActivities(authUser?.token ?? '', 1, 0, {
+    onSuccess: (data) => {
+      if (data?.activities) {
+        saveActivitiesToStorage(data.activities);
+      }
+    }
+  });
   const {
     data: activitiesData,
     isLoading: activitiesLoading
@@ -39,12 +47,20 @@ function App() {
     if (authUser?.token) {
       try {
         setIsSubmitting(true);
-        await addActivityMutation.mutateAsync({
+        const result = await addActivityMutation.mutateAsync({
           token: authUser.token,
           description
         });
+        
+        // Update localStorage with new activity
+        const storedActivities = getActivitiesFromStorage();
+        const updatedActivities = [result, ...storedActivities];
+        saveActivitiesToStorage(updatedActivities);
+        
+        toast.success('Activity added successfully!');
       } catch (error) {
         console.error('Error submitting activity:', error);
+        toast.error('An error occurred while adding the activity. Please try again later.');
       } finally {
         setIsSubmitting(false);
       }
@@ -53,20 +69,19 @@ function App() {
 
   // Transform activities data for HeatMap
   const heatmapData = useMemo(() => {
-    // console.log('All activities for heatmap:', activities); // Debug log
+    const activities = allActivities.length > 0 ? allActivities : getActivitiesFromStorage();
 
-    if (!Array.isArray(allActivities) || allActivities.length === 0) {
-      // console.log('No activities available for heatmap');
+    if (!Array.isArray(activities) || activities.length === 0) {
       return [];
     }
 
-    const countsByDate = allActivities.reduce<Record<string, number>>((acc, activity) => {
-      if (!allActivities) return acc;
+    const countsByDate = activities.reduce<Record<string, number>>((acc, activity) => {
+      if (!activities) return acc;
 
       try {
         const activityDate = activity.date || activity.createdAt;
         if (!activityDate) {
-          console.log('Activity missing date:', activity);
+          // console.log('Activity missing date:', activity);
           return acc;
         }
 
