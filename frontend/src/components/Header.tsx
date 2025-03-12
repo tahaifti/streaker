@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Flame, LogOut, MessageCircle, User } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { useAuth } from '../utils/auth';
 import FeedbackForm from './FeedbackForm';
 
@@ -8,6 +9,12 @@ const Header: React.FC = () => {
     const { authUser, logout } = useAuth();
     const navigate = useNavigate();
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+
+    const handleLogout = () => {
+        toast.success('Logged out successfully!');
+        logout();
+        navigate('/');
+    };
 
     return (
         <header className="bg-white shadow-sm">
@@ -40,10 +47,7 @@ const Header: React.FC = () => {
                                 </Link>
                                 <button
                                     className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-gray-900"
-                                    onClick={() => {
-                                        logout();
-                                        navigate('/');
-                                    }}
+                                    onClick={handleLogout}
                                 >
                                     <LogOut className="h-5 w-5" />
                                     <span className="hidden sm:inline">Sign Out</span>

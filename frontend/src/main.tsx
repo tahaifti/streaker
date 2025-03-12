@@ -11,6 +11,8 @@ import { AuthProvider } from './utils/auth.tsx';
 import Landing from './pages/Landing.tsx';
 import Profile from './pages/Profile.tsx';
 import FeedbackView from './pages/FeedbackView.tsx';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -37,6 +39,18 @@ createRoot(document.getElementById('root')!).render(
             <Route path='/user' element={<Profile />} />
             <Route path="/feedback" element={<FeedbackView />} />
           </Routes>
+          <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme='dark'
+          />
         </Router>
       </QueryClientProvider>
     </AuthProvider>
