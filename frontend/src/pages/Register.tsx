@@ -4,6 +4,7 @@ import { UserPlus } from 'lucide-react';
 import { registerUser } from '../utils/api';
 import { useAuth } from '../utils/auth';
 import { CreateUserInput, createUserSchema } from '@ifti_taha/streaker-common';
+import { toast } from 'react-toastify';
 
 const Register: React.FC = () => {
     const [formData, setFormData] = useState<CreateUserInput>({
@@ -46,6 +47,7 @@ const Register: React.FC = () => {
 
             // Success case
             navigate('/login');
+            toast.success('Account created successfully. Please log in to continue.');
 
         } catch (error: any) {
             if (error.errors) {
@@ -58,9 +60,11 @@ const Register: React.FC = () => {
                     }
                 });
                 setValidationErrors(errors);
+                toast.error('Please fix the errors in the form and try again.');
             } else {
                 // API or other errors
                 setError(error.message || 'An error occurred during registration');
+                toast.error('Please fix the errors in the form and try again.');
             }
         } finally {
             setLoading(false);
