@@ -4,16 +4,7 @@ import { useAuth } from '../utils/auth';
 import { useUser, useAllActivities, useUpdateUser, useChangePassword } from '../hooks/useQueries';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-
-// interface UserProfile {
-//     id: string;
-//     name: string;
-//     username: string;
-//     email: string;
-//     current_streak: number;
-//     longest_streak: number;
-//     createdAt: string;
-// }
+import { toast } from 'react-toastify';
 
 interface Activity {
     id: string;
@@ -84,6 +75,7 @@ const Profile: React.FC = () => {
             }, 3000);
         } catch (err : any) {
             setError(err.response?.data?.message || 'An error occurred while updating profile');
+            toast.error(err.response?.data?.message || 'An error occurred while updating profile');
         }
     };
 
@@ -93,7 +85,7 @@ const Profile: React.FC = () => {
             setError("New passwords don't match");
             return;
         }
-        // TODO: Implement password change API call
+
         try {
             setError('');
             setSuccessMessage('');
@@ -112,6 +104,7 @@ const Profile: React.FC = () => {
             }, 3000);
         } catch (err : any) {
             setError(err.response?.data?.message || 'An error occurred while changing password');
+            toast.error(err.response?.data?.message || 'An error occurred while changing password');
         }
         setShowPasswordModal(false);
     };
