@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchStreaks, fetchLongestStreak, fetchAllActivities, addActivity, fetchUserProfile, updateUserProfile, changePassword } from '../utils/api'
-
+import {Activity} from '@ifti_taha/streaker-common';
 // Query keys
 export const queryKeys = {
   streaks: 'streaks',
@@ -25,13 +25,14 @@ export function useLongestStreak(token: string) {
   })
 }
 
-export function useAllActivities(token : string, page : number, limit : number) {
-    return useQuery({
-        queryKey: [queryKeys.allActivities, token],
-        queryFn: () => fetchAllActivities(token, page, limit),
-        enabled: !!token,
-        placeholderData: (previousData) => previousData
-    })
+export function useAllActivities(token: string, page: number, limit: number, options?: { onSuccess?: (data: { activities: Activity[] }) => void }) {
+  return useQuery({
+    queryKey: [queryKeys.allActivities, token],
+    queryFn: () => fetchAllActivities(token, page, limit),
+    enabled: !!token,
+    placeholderData: (previousData) => previousData,
+    ...options
+  })
 }
 
 export function useActivities(token: string, page: number, limit: number) {
