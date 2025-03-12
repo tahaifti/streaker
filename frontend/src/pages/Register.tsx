@@ -209,7 +209,7 @@ const Register: React.FC = () => {
                                     <svg className="h-4 w-4 mr-1 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zm-1 7a1 1 0 01-1-1v-3a1 1 0 112 0v3a1 1 0 01-1 1z" clipRule="evenodd" />
                                     </svg>
-                                    Please enter a unique username without spaces (e.g., dexter@ifti)
+                                    Please enter a unique username without spaces (e.g., dexter-ifti)
                                 </p>
                             </div>
                         </div>
