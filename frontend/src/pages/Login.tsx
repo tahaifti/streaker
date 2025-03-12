@@ -4,6 +4,7 @@ import { LogIn } from 'lucide-react';
 import { loginUser } from '../utils/api';
 import { useAuth } from '../utils/auth';
 import { LoginInput, loginSchema } from '@ifti_taha/streaker-common';
+import { toast } from 'react-toastify';
 
 const Login: React.FC = () => {
     const { login, authUser } = useAuth();
@@ -47,6 +48,7 @@ const Login: React.FC = () => {
             // Success case
             login(response.user, response.token);
             navigate('/home');
+            toast.success('Logged in successfully!');
 
         } catch (error: any) {
             // Handle both validation errors and API errors
@@ -60,12 +62,15 @@ const Login: React.FC = () => {
                     }
                 });
                 setValidationErrors(errors);
+                toast.error('Please fix the errors in the form');
             } else if (error.response?.data) {
                 // API error with response data
                 setError(error.response.data.message || 'An error occurred during login');
+                toast.error('Please fix the errors in the form');
             } else {
                 // Generic error
                 setError(error.message || 'An error occurred during login');
+                toast.error('Please fix the errors in the form');
             }
         } finally {
             setLoading(false);
