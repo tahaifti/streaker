@@ -8,8 +8,6 @@ import HeatMap from './components/HeatMap';
 import InstallPrompt from './components/InstallPrompt';
 import { useStreaks, useLongestStreak, useActivities, useAllActivities, useAddActivity } from './hooks/useQueries'
 import { toast } from 'react-toastify';
-import { saveActivitiesToStorage, getActivitiesFromStorage } from './utils/storage';
-
 
 function App() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -22,13 +20,7 @@ function App() {
   const {
     data: allActivitesData,
     isLoading: allActivitiesLoading
-  } = useAllActivities(authUser?.token ?? '', 1, 0, {
-    onSuccess: (data) => {
-      if (data?.activities) {
-        saveActivitiesToStorage(data.activities);
-      }
-    }
-  });
+  } = useAllActivities(authUser?.token ?? '', 1, 0);
   const {
     data: activitiesData,
     isLoading: activitiesLoading
@@ -47,15 +39,10 @@ function App() {
     if (authUser?.token) {
       try {
         setIsSubmitting(true);
-        const result = await addActivityMutation.mutateAsync({
+        await addActivityMutation.mutateAsync({
           token: authUser.token,
           description
         });
-        
-        // Update localStorage with new activity
-        const storedActivities = getActivitiesFromStorage();
-        const updatedActivities = [result, ...storedActivities];
-        saveActivitiesToStorage(updatedActivities);
         
         toast.success('Activity added successfully!');
       } catch (error) {
@@ -69,19 +56,16 @@ function App() {
 
   // Transform activities data for HeatMap
   const heatmapData = useMemo(() => {
-    const activities = allActivities.length > 0 ? allActivities : getActivitiesFromStorage();
-
-    if (!Array.isArray(activities) || activities.length === 0) {
+    if (!Array.isArray(allActivities) || allActivities.length === 0) {
       return [];
     }
 
-    const countsByDate = activities.reduce<Record<string, number>>((acc, activity) => {
-      if (!activities) return acc;
+    const countsByDate = allActivities.reduce<Record<string, number>>((acc, activity) => {
+      if (!activity) return acc;
 
       try {
         const activityDate = activity.date || activity.createdAt;
         if (!activityDate) {
-          // console.log('Activity missing date:', activity);
           return acc;
         }
 
@@ -101,13 +85,10 @@ function App() {
       }
     }, {});
 
-    const result = Object.keys(countsByDate).map(date => ({
+    return Object.keys(countsByDate).map(date => ({
       date,
       count: countsByDate[date]
     }));
-
-    // console.log('Processed heatmap data:', result); // Debug log
-    return result;
   }, [allActivities]);
 
 
