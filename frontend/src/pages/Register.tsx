@@ -1,11 +1,25 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserPlus } from 'lucide-react';
-import { registerUser, loginUser } from '../utils/api';
+import { registerUser, loginUser, fetchUserInfo } from '../utils/api';
 import { useAuth } from '../utils/auth';
 import { CreateUserInput, createUserSchema } from '@ifti_taha/streaker-common';
 import { toast } from 'react-toastify';
 import { useGoogleLogin } from '@react-oauth/google';
+
+// Add this helper function at the top of your component, after the imports
+const generateUsername = (name: string): string => {
+    // Remove special characters and spaces, convert to lowercase
+    const cleanName = name.toLowerCase()
+        .replace(/[^a-zA-Z0-9]/g, '')
+        .replace(/\s+/g, '');
+    
+    // Generate a random string
+    const randomString = Math.random().toString(36).substring(2, 6);
+    
+    // Combine name with random string
+    return `${cleanName}-${randomString}`;
+};
 
 const Register: React.FC = () => {
     const [formData, setFormData] = useState<CreateUserInput>({
@@ -81,9 +95,22 @@ const Register: React.FC = () => {
         }
     };
 
+    // Replace the existing handleChange function
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        
+        if (name === 'name') {
+            // When name field changes, generate and set username
+            const suggestedUsername = generateUsername(value);
+            setFormData(prev => ({ 
+                ...prev, 
+                [name]: value,
+                username: suggestedUsername 
+            }));
+        } else {
+            // For other fields, just update normally
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     const handleFocus = (fieldName: string) => {
@@ -100,31 +127,80 @@ const Register: React.FC = () => {
 
     const googleLogin = useGoogleLogin({
         onSuccess: async (tokenResponse) => {
-            const userInfo = await fetchUserInfo(tokenResponse.access_token);
-            // Auto-fill form data with Google user info
-            setFormData({
-                name: userInfo.name,
-                username: userInfo.email.split('@')[0], // Generate a username from email
-                email: userInfo.email,
-                password: 'djfghugFdr0439', // Random password
-            });
-            // Automatically submit the form
-            handleSubmit(new Event('submit') as any);
+            try {
+                setLoading(true);
+                setError('');
+                setValidationErrors({});
+                
+                const userInfo = await fetchUserInfo(tokenResponse.access_token);
+                
+                // Generate a unique username by appending random string
+                const randomString = Math.random().toString(36).substring(2, 8);
+                const suggestedUsername = `${userInfo.email.split('@')[0]}-${randomString}`;
+                
+                // Create the user data
+                const googleUserData = {
+                    name: userInfo.name,
+                    username: suggestedUsername,
+                    email: userInfo.email,
+                    password: `G${Math.random().toString(36).slice(-8)}${Math.random().toString(36).slice(-8)}`
+                };
+
+                // Validate the data using Zod schema
+                try {
+                    createUserSchema.parse(googleUserData);
+                } catch (validationError: any) {
+                    const errors: Record<string, string> = {};
+                    validationError.errors.forEach((err: any) => {
+                        if (err.path) {
+                            errors[err.path[0]] = err.message;
+                        }
+                    });
+                    setValidationErrors(errors);
+                    toast.error('Invalid data received from Google. Please try again.');
+                    return;
+                }
+
+                // Attempt to register
+                const response = await registerUser(googleUserData);
+
+                if (response.error) {
+                    setError(response.message || 'Registration failed');
+                    toast.error(response.message || 'Registration failed');
+                    return;
+                }
+
+                // Attempt to login
+                const loginResponse = await loginUser({ 
+                    email: googleUserData.email, 
+                    password: googleUserData.password 
+                });
+
+                if (loginResponse.error || !loginResponse.token) {
+                    setError(loginResponse.message || 'Login failed');
+                    toast.error(loginResponse.message || 'Login failed');
+                    return;
+                }
+
+                // Success case
+                login(loginResponse.user, loginResponse.token);
+                navigate('/home');
+                toast.success('Account created and logged in successfully!');
+
+            } catch (error: any) {
+                console.error('Google registration error:', error);
+                setError(error.message || 'Registration failed. Please try again.');
+                toast.error(error.message || 'Registration failed. Please try again.');
+            } finally {
+                setLoading(false);
+            }
         },
         onError: () => {
+            setError('Google login failed!');
             toast.error('Google login failed!');
+            setLoading(false);
         },
     });
-
-    const fetchUserInfo = async (accessToken: string) => {
-        const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-        });
-        const userInfo = await response.json();
-        return userInfo;
-    };
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -216,6 +292,7 @@ const Register: React.FC = () => {
                                     name="username"
                                     type="text"
                                     autoComplete="username"
+                                    readOnly
                                     required
                                     pattern="^\S*$"
                                     title="Username must not contain spaces"
@@ -246,7 +323,8 @@ const Register: React.FC = () => {
                                     <svg className="h-4 w-4 mr-1 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zm-1 7a1 1 0 01-1-1v-3a1 1 0 112 0v3a1 1 0 01-1 1z" clipRule="evenodd" />
                                     </svg>
-                                    Please enter a unique username without spaces (e.g., dexter-ifti)
+                                    {/* Please enter a unique username without spaces (e.g., dexter-ifti) */}
+                                    Your username will be generated automatically
                                 </p>
                             </div>
                         </div>
@@ -372,7 +450,7 @@ const Register: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="mt-6 grid grid-cols-2 gap-3">
+                            <div className="mt-6">
                                 <div>
                                     <button
                                         onClick={(e: React.MouseEvent) => {
@@ -403,14 +481,6 @@ const Register: React.FC = () => {
                                         </svg>
                                         <span>Continue with Google</span>
                                     </button>
-                                </div>
-                                <div>
-                                    <a href="#" className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200">
-                                        <svg className="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M6.29 18.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0020 3.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.073 4.073 0 01.8 7.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 010 16.407a11.616 11.616 0 006.29 1.84" />
-                                        </svg>
-                                        <span className="ml-2">Continue with GitHub</span>
-                                    </a>
                                 </div>
                             </div>
                         </div>
