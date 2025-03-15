@@ -16,7 +16,8 @@ export const userSchema = z.object({
         .min(6, { message: 'Password must be at least 6 characters long' })
         .regex(/[A-Z]/, { message: 'Password must contain at least one uppercase letter' })
         .regex(/[a-z]/, { message: 'Password must contain at least one lowercase letter' })
-        .regex(/[0-9]/, { message: 'Password must contain at least one number' }),
+        .regex(/[0-9]/, { message: 'Password must contain at least one number' })
+        .optional(),
     current_streak: z.number().int().min(0, { message: 'Streak cannot be negative' }),
     longest_streak: z.number().int().min(0, { message: 'Streak cannot be negative' }),
     createdAt: z.date(),
@@ -42,6 +43,7 @@ export const createUserSchema = z.object({
 export const loginSchema = z.object({
     email: userSchema.shape.email,
     password: userSchema.shape.password,
+    isOAuthLogin: z.boolean().optional(),
 })
 
 export const updateUserSchema = createUserSchema.partial();
