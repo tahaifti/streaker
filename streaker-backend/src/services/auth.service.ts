@@ -38,7 +38,7 @@ export class AuthService {
         }
     }
 
-    async verifyUser(email: string, password: string) {
+    async verifyUser(email: string, password: string, isOAuthLogin: boolean = false) {
         const user = await this.db.user.findUnique({
             where: { email },
         })
@@ -47,6 +47,9 @@ export class AuthService {
             throw new HTTPException(404, { message: 'User not found' });
         }
 
+        if(isOAuthLogin) {
+            return user;
+        }
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
             throw new HTTPException(401, { message: 'Invalid password' });
