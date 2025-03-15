@@ -13,6 +13,7 @@ import Profile from './pages/Profile.tsx';
 import FeedbackView from './pages/FeedbackView.tsx';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -25,8 +26,9 @@ if ('serviceWorker' in navigator) {
       });
   });
 }
-
+ const client = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 createRoot(document.getElementById('root')!).render(
+  <GoogleOAuthProvider clientId={client}>
   <StrictMode>
     <AuthProvider>
       <QueryClientProvider client={queryClient}>
@@ -55,4 +57,5 @@ createRoot(document.getElementById('root')!).render(
       </QueryClientProvider>
     </AuthProvider>
   </StrictMode>
+  </GoogleOAuthProvider>
 );
