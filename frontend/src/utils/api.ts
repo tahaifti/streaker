@@ -201,6 +201,28 @@ const changePassword = async (token: string, oldPassword: string, newPassword: s
     }
 }
 
+interface GoogleUserInfo {
+    name: string;
+    email: string;
+    picture: string;
+    email_verified: boolean;
+}
+
+const fetchUserInfo = async (accessToken: string): Promise<GoogleUserInfo> => {
+        const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch user info from Google');
+        }
+        
+        const userInfo = await response.json();
+        return userInfo;
+    };
+
 export { 
     registerUser, 
     loginUser, 
@@ -211,5 +233,6 @@ export {
     addActivity, 
     fetchUserProfile, 
     updateUserProfile, 
-    changePassword
+    changePassword,
+    fetchUserInfo
 };
