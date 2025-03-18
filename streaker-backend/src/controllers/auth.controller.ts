@@ -20,7 +20,7 @@ export class AuthController{
         const body = await c.req.json();
 
         const { success } = loginSchema.safeParse(body);
-        console.log(success);
+        // console.log(success);
         if(!success) {
             return c.json({message: 'Invalid input'}, 400)
         }
