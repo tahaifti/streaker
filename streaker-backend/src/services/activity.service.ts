@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client/edge";
-import { cache } from "hono/cache";
+// import { cache } from "hono/cache";
 import { HTTPException } from "hono/http-exception";
 
 export class ActivityService {
@@ -10,17 +10,6 @@ export class ActivityService {
             const activityDate = new Date(date);
             activityDate.setUTCHours(0, 0, 0, 0);
 
-            if (this.db.$cache) {
-                const cacheKeyPatterns = [
-                    `activity:findMany:${userId}:*`, // Invalidate all activity queries for the user
-                    `user:${userId}`, // Invalidate user cache
-                    `streak:${userId}`, // Invalidate streak cache
-                ];
-
-                for (const pattern of cacheKeyPatterns) {
-                    await this.db.$cache.invalidate({ prefix: pattern });
-                }
-            }
 
             const activity = await this.db.activity.upsert({
                 where: {
@@ -39,12 +28,10 @@ export class ActivityService {
                     date: activityDate,
                     description: [description],
                 },
-                cacheStrategy: { skip: true } // Skip cache for this operation
             });
 
-            // Update streaks after saving activity
-            const current_streak = await this.getCurrentStreak(userId, true); // Skip cache for fresh data
-            const longest_streak = await this.getLongestStreak(userId, true); // Skip cache for fresh data
+            const current_streak = await this.getCurrentStreak(userId);
+            const longest_streak = await this.getLongestStreak(userId);
 
             await this.db.user.update({
                 where: { id: userId },
@@ -52,7 +39,6 @@ export class ActivityService {
                     current_streak,
                     longest_streak: Math.max(current_streak, longest_streak),
                 },
-                cacheStrategy: { skip: true } // Skip cache for update operation
             });
 
             return activity;
@@ -61,7 +47,7 @@ export class ActivityService {
         }
     }
 
-    async getActivities(userId: string, days: number, skipCache : boolean = false) {
+    async getActivities(userId: string, days: number) {
         try {
             const startDate = new Date();
             startDate.setDate(startDate.getDate() - days);
@@ -76,24 +62,15 @@ export class ActivityService {
                 orderBy: {
                     date: 'desc'
                 },
-                cacheStrategy: skipCache
-                    ? { skip: true }
-                    : {
-                        ttl: 60,  // 1 minute
-                        swr: 300  // 5 minutes
-                    }
             })
         } catch (error: any) {
             throw new HTTPException(500, { message: `Failed to get activities: ${error.message}` });
         }
     }
 
-    async getAllActivities(userId: string, page: number, limit: number, skipCache: boolean = false) {
+    async getAllActivities(userId: string, page: number, limit: number) {
         try {
-            const cacheStrategy = skipCache
-                ? { skip: true }
-                : { ttl: 60, swr: 300 }; 
-            // If limit is 0, fetch all activities without pagination
+
             if (limit === 0) {
                 const activities = await this.db.activity.findMany({
                     where: {
@@ -102,7 +79,6 @@ export class ActivityService {
                     orderBy: {
                         createdAt: 'desc',
                     },
-                    cacheStrategy
                 });
 
                 return {
@@ -112,6 +88,7 @@ export class ActivityService {
                     currentPage: 1,
                 };
             }
+
             const skip = (page - 1) * limit;
             const activities = await this.db.activity.findMany({
                 where: {
@@ -122,16 +99,12 @@ export class ActivityService {
                 },
                 skip,
                 take: limit,
-                cacheStrategy
             });
 
             const totalActivities = await this.db.activity.count({
                 where: {
                     userId,
                 },
-                cacheStrategy: skipCache
-                    ? { skip: true }
-                    : { ttl: 300 } 
             });
             return {
                 activities,
@@ -144,7 +117,7 @@ export class ActivityService {
         }
     }
 
-    async getCurrentStreak(userId: string, skipCache: boolean = false) {
+    async getCurrentStreak(userId: string) {
         try {
             const activities = await this.db.activity.findMany({
                 where: {
@@ -153,9 +126,6 @@ export class ActivityService {
                 orderBy: {
                     date: 'desc',
                 },
-                cacheStrategy: skipCache
-                    ? { skip: true }
-                    : { ttl: 60 }
             });
 
             let streak = 0;
@@ -174,7 +144,6 @@ export class ActivityService {
                 await this.db.user.update({
                     where: { id: userId },
                     data: { current_streak: 0 },
-                    cacheStrategy: { skip: true }
                 });
                 return 0;
             }
@@ -203,7 +172,6 @@ export class ActivityService {
                         increment: streak > (await this.getLongestStreak(userId)) ? streak : 0
                     }
                 },
-                cacheStrategy: { skip: true }
             });
 
             return streak;
@@ -212,7 +180,7 @@ export class ActivityService {
         }
     }
 
-    getLongestStreak = async (userId: string, skipCache : boolean = false) => {
+    getLongestStreak = async (userId: string) => {
         try {
             const activities = await this.db.activity.findMany({
                 where: {
@@ -221,9 +189,6 @@ export class ActivityService {
                 orderBy: {
                     date: 'asc', // Sort by date in ascending order
                 },
-                cacheStrategy: skipCache
-                    ? { skip: true }
-                    : { ttl: 300 }
             });
 
             let longestStreak = 0;
@@ -265,19 +230,4 @@ export class ActivityService {
         }
     }
 
-    async invalidateUserCache(userId: string) {
-        if (!this.db.$cache) return;
-        
-        const patterns = [
-            `user:${userId}`,
-            `activity:findMany:${userId}`,
-            `streak:${userId}`
-        ];
-        
-        await Promise.all(
-            patterns.map(pattern => 
-                this.db.$cache.invalidate({ prefix: pattern })
-            )
-        );
-    }
 }
