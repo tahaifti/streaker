@@ -134,9 +134,10 @@ const Register: React.FC = () => {
                 
                 const userInfo = await fetchUserInfo(tokenResponse.access_token);
                 
-                // Generate a unique username by appending random string
+                // Generate a unique username by properly handling dots in email
                 const randomString = Math.random().toString(36).substring(2, 8);
-                const suggestedUsername = `${userInfo.email.split('@')[0]}-${randomString}`;
+                const emailUsername = userInfo.email.split('@')[0].replace(/\./g, ''); // Remove dots from email
+                const suggestedUsername = `${emailUsername}-${randomString}`;
                 
                 // Create the user data
                 const googleUserData = {
