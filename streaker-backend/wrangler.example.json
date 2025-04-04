@@ -1,0 +1,10 @@
+{
+    "$schema": "node_modules/wrangler/config-schema.json",
+    "name": "streaker-backend",
+    "main": "src/index.ts",
+    "compatibility_date": "2025-01-31",
+    "vars": {
+        "DATABASE_URL": "YOUR_PRISMA_ACCELERATED_DB_URL",
+        "JWT_SECRET": "YOUR_JWT_SECRET"
+    }
+}

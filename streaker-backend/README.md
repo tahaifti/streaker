@@ -39,6 +39,7 @@ npm install
 3. Configure environment variables
 ```bash
 cp .env.example .env
+cp wrangler.example.json wrangler.json
 # Edit .env file with your configuration
 ```
 
@@ -47,11 +48,9 @@ cp .env.example .env
 npm run dev
 ```
 
-The server will start at `http://localhost:5000`
+The server will start at `http://localhost:8787`
 
 
-## Deployment
-The application is deployed at: [https://streaker-backend.archonbumper.workers.dev](https://streaker-backend.archonbumper.workers.dev)
 
 ## Contributing
 1. Fork the repository
