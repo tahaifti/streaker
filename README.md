@@ -68,4 +68,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 Your Name - [@DexterIfti](https://twitter.com/DexterIfti)
 Project Link: [https://github.com/dexter-ifti/streaker/](https://github.com/dexter-ifti/streaker/)
 
-<!-- GitAds-Verify: 2GZ3FL8TLUJ89JAJD5I2V44TVT95WPLC -->
+
+## GitAds Sponsored
+[![Sponsored by GitAds](https://gitads.dev/v1/ad-serve?source=dexter-ifti/streaker@github)](https://gitads.dev/v1/ad-track?source=dexter-ifti/streaker@github)
+
