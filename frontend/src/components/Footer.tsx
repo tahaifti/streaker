@@ -29,7 +29,7 @@ const Footer = () => {
                                 <Github className="h-5 w-5 md:h-6 md:w-6" />
                             </a>
                             <a
-                                href="https://twitter.com/dexter_ifti"
+                                href="https://twitter.com/DexterIfti"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-gray-600 hover:text-gray-900 transition-colors"
