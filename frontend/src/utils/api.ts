@@ -26,32 +26,30 @@ const user_api = axios.create({
     }
 })
 
+const handleApiError = (error: any, context: string) => {
+    if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+    }
+    if (error.response?.data?.error) {
+        throw new Error(error.response.data.error);
+    }
+    if (typeof error.response?.data === 'string') {
+        throw new Error(error.response.data);
+    }
+    if (error.response?.statusText) {
+        throw new Error(error.response.statusText);
+    }
+    
+    console.error(`${context} error:`, error);
+    throw new Error(`Unable to ${context.toLowerCase()}. Please try again later.`);
+};
+
 const registerUser = async (userData: CreateUserInput) => {
     try {
         const response = await auth_api.post("/register", userData);
         return response.data;
     } catch (error: any) {
-        // First check for message in error.response.data.message
-        if (error.response?.data?.message) {
-            throw new Error(error.response.data.message);
-        }
-        // Then check for error in error.response.data.error
-        else if (error.response?.data?.error) {
-            throw new Error(error.response.data.error);
-        }
-        // Check for direct message string in response data
-        else if (typeof error.response?.data === 'string') {
-            throw new Error(error.response.data);
-        }
-        // Check for direct message in network response
-        else if (error.response?.statusText) {
-            throw new Error(error.response.statusText);
-        }
-        // If we still can't find the message, log the entire error and use fallback
-        else {
-            console.error("Registration error:", error);
-            throw new Error("Unable to register user. Please try again later.");
-        }
+        handleApiError(error, 'Registration');
     }
 };
 
@@ -60,26 +58,18 @@ const loginUser = async (userData: LoginInput) => {
         const response = await auth_api.post("/login", userData);
         return response.data;
     } catch (error: any) {
-        if (error.response?.data?.message) {
-            throw new Error(error.response.data.message);
+        // console.log("Login error:", error.response?.data); // For debugging
+
+        if (userData.isOAuthLogin &&
+            (error.response?.data?.error === 'USER_NOT_FOUND' ||
+                error.response?.status === 404 ||
+                error.response?.data?.message === 'User not found')) {
+            return {
+                error: 'USER_NOT_FOUND',
+                message: 'User not registered with Google yet'
+            };
         }
-        // Then check for error in error.response.data.error
-        else if (error.response?.data?.error) {
-            throw new Error(error.response.data.error);
-        }
-        // Check for direct message string in response data
-        else if (typeof error.response?.data === 'string') {
-            throw new Error(error.response.data);
-        }
-        // Check for direct message in network response
-        else if (error.response?.statusText) {
-            throw new Error(error.response.statusText);
-        }
-        // If we still can't find the message, log the entire error and use fallback
-        else {
-            console.error("Login error:", error);
-            throw new Error("Unable to Login user. Please try again later.");
-        }
+        return handleApiError(error, 'Login');
     }
 };
 
