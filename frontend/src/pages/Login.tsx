@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
-import { fetchUserInfo, loginUser } from '../utils/api';
+import { fetchUserInfo, loginUser, registerUser } from '../utils/api';
 import { useAuth } from '../utils/auth';
 import { LoginInput, loginSchema } from '@ifti_taha/streaker-common';
 import { toast } from 'react-toastify';
@@ -101,32 +101,64 @@ const Login: React.FC = () => {
                 setLoading(true);
                 setError('');
                 setValidationErrors({});
-                
+
                 const userInfo = await fetchUserInfo(tokenResponse.access_token);
-                
-                // Attempt to login with Google credentials
+
+                // First try to login
                 const loginResponse = await loginUser({
                     email: userInfo.email,
                     isOAuthLogin: true,
                 });
 
-                if (loginResponse.error || !loginResponse.token) {
-                    // If user doesn't exist, redirect to register
-                    if (loginResponse.error === 'USER_NOT_FOUND') {
-                        toast.info('Please register first with Google');
-                        navigate('/register');
+                // If user doesn't exist, auto-register them and then login
+                if (loginResponse.error === 'USER_NOT_FOUND') {
+                    // console.log("New Google user, auto-registering");  // For debugging
+
+                    // Register the user with Google info
+                    const randomString = Math.random().toString(36).substring(2, 8);
+                    const emailUsername = userInfo.email.split('@')[0].replace(/\./g, '');
+                    const suggestedUsername = `${emailUsername}-${randomString}`;
+                    const registerResponse = await registerUser({
+                        name: userInfo.name,
+                        username: suggestedUsername,
+                        email: userInfo.email,
+                        password: `G${Math.random().toString(36).slice(-8)}${Math.random().toString(36).slice(-8)}`
+                    });
+
+                    if (registerResponse.error) {
+                        setError(registerResponse.message || 'Registration failed');
+                        toast.error(registerResponse.message || 'Registration failed');
                         return;
                     }
-                    setError(loginResponse.message || 'Login failed');
-                    toast.error(loginResponse.message || 'Login failed');
+
+                    // Now login the newly registered user
+                    const newLoginResponse = await loginUser({
+                        email: userInfo.email,
+                        isOAuthLogin: true,
+                    });
+
+                    if (!newLoginResponse.error && newLoginResponse.token) {
+                        login(newLoginResponse.user, newLoginResponse.token);
+                        navigate('/home');
+                        toast.success('Account created and logged in successfully!');
+                        return;
+                    } else {
+                        setError(newLoginResponse.message || 'Login failed after registration');
+                        toast.error(newLoginResponse.message || 'Login failed after registration');
+                        return;
+                    }
+                }
+
+                // Handle normal login flow
+                if (!loginResponse.error && loginResponse.token) {
+                    login(loginResponse.user, loginResponse.token);
+                    navigate('/home');
+                    toast.success('Logged in successfully!');
                     return;
                 }
 
-                // Success case
-                login(loginResponse.user, loginResponse.token);
-                navigate('/home');
-                toast.success('Logged in successfully!');
-
+                setError(loginResponse.message || 'Login failed');
+                toast.error(loginResponse.message || 'Login failed');
             } catch (error: any) {
                 console.error('Google login error:', error);
                 setError(error.message || 'Login failed');
@@ -141,7 +173,6 @@ const Login: React.FC = () => {
             setLoading(false);
         }
     });
-
     return (
         <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
