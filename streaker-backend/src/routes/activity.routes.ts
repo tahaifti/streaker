@@ -63,3 +63,23 @@ activityRouter.get('/longest-streak', (c) => {
     const activityController = new ActivityController(activityService);
     return activityController.getLongestStreak(c)
 });
+
+// PUT api/activity/activities/:id/items/index - Edit an activity
+activityRouter.put('/activities/:id/items/:index', (c) => {
+    const prisma = new PrismaClient({
+        datasourceUrl: c.env?.DATABASE_URL
+    }).$extends(withAccelerate());
+    const activityService = new ActivityService(prisma);
+    const activityController = new ActivityController(activityService);
+    return activityController.editActivity(c);
+});
+
+// DELETE api/activity/activities/:id/items/:index - Delete an activity
+activityRouter.delete('/activities/:id/items/:index', (c) => {
+    const prisma = new PrismaClient({
+        datasourceUrl: c.env?.DATABASE_URL
+    }).$extends(withAccelerate());
+    const activityService = new ActivityService(prisma);
+    const activityController = new ActivityController(activityService);
+    return activityController.deleteActivity(c);
+})

@@ -57,4 +57,25 @@ export class ActivityController {
         const streak = await this.activityService.getLongestStreak(userId);
         return c.json({ streak });
     }
+
+    async editActivity(c: Context) {
+        const { id : userId } = c.get('jwtPayload');
+        const body = await c.req.json();
+        const itemIndex = parseInt(c.req.param('index'));
+        const activity = await this.activityService.editActivity(userId, c.req.param('id'), body.description, itemIndex);
+        if (!activity) {
+            return c.json({ error: 'Activity not found' }, 404);
+        }
+        return c.json(activity, 200); 
+    }
+
+    async deleteActivity(c : Context){
+        const { id : userId } = c.get('jwtPayload');
+        const itemIndex = parseInt(c.req.param('index'));
+        const activity = await this.activityService.deleteActivity(userId, c.req.param('id'), itemIndex);
+        if (!activity) {
+            return c.json({ error: 'Activity not found' }, 404);
+        }
+        return c.json({ message: 'Activity deleted successfully' }, 200);
+    }
 }

@@ -230,4 +230,82 @@ export class ActivityService {
         }
     }
 
+    async editActivity(userId: string, activityId : string, newDescription : string, itemIndex : number) {
+        try {
+            const activity = await this.db.activity.findUnique({
+                where : {
+                    id: activityId,
+                    userId: userId,
+                },
+            })
+            if (!activity) {
+                return null; // Activity not found
+            }
+            if (itemIndex < 0 || itemIndex >= activity.description.length) {
+                throw new HTTPException(400, { message: 'Invalid item index' }); // Invalid index
+            }
+            if (!newDescription || newDescription.trim() === '') {
+                throw new HTTPException(400, { message: 'Description cannot be empty' }); // Empty description
+            }
+            const updatedDescription = [...activity.description];
+            updatedDescription[itemIndex] = newDescription.trim();
+
+            const updatedActivity = await this.db.activity.update({
+                where: {
+                    id: activityId,
+                },
+                data: {
+                    description: updatedDescription,
+                },
+            });
+            return updatedActivity;
+        } catch (error: any) {
+            throw new HTTPException(500, { message: `Failed to edit activity: ${error.message}` }); 
+        }
+    }
+
+    async deleteActivity(userId : string, activityId : string, itemIndex : number) {
+        try {
+            const activity = await this.db.activity.findUnique({
+                where: {
+                    id: activityId,
+                    userId: userId,
+                },
+            });
+            
+            if (!activity) {
+                return null; // Activity not found
+            }
+            if (itemIndex < 0 || itemIndex >= activity.description.length) {
+                return null; // Invalid index
+            }
+            const updateddescription = activity.description.filter((_ : any, index: number) => index !== itemIndex);
+
+            const updatedActivity = await this.db.activity.update({
+                where : {
+                    id: activityId,
+                },
+                data: {
+                    description: updateddescription,
+                },
+            })
+            if (updateddescription.length === 0) {
+                // If no descriptions left, delete the activity
+                await this.db.activity.delete({
+                    where: {
+                        id: activityId,
+                    },
+                });
+                return null; // Activity deleted
+            }
+
+            // Recalculate streaks after deletion
+            await this.getCurrentStreak(userId);
+            await this.getLongestStreak(userId);
+
+            return updatedActivity;
+        } catch (error: any) {
+            throw new HTTPException(500, { message: `Failed to delete activity: ${error.message}` });
+        }
+    }
 }
