@@ -91,35 +91,38 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ isOpen, onClose }) => {
   return (
     <>
       {/* Main Feedback Modal */}
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-        <div className="bg-gray-800/90 backdrop-blur-xl rounded-2xl p-8 w-full max-w-lg mx-4 shadow-2xl border border-gray-700/50 animate-fade-in-up">
+      <div 
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-start justify-center pt-8 pb-8 px-4 overflow-y-auto animate-fade-in"
+        style={{ zIndex: 9999 }}
+      >
+        <div className="bg-gray-800/95 backdrop-blur-xl rounded-2xl p-6 sm:p-8 w-full max-w-lg shadow-2xl border border-gray-700/50 animate-fade-in-up my-auto">
           {/* Header */}
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex justify-between items-start mb-6">
             <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 rounded-xl">
-                <MessageSquare className="w-6 h-6 text-white" />
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-2.5 rounded-xl">
+                <MessageSquare className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white">Share Your Thoughts</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-white">Share Your Thoughts</h2>
                 <p className="text-gray-400 text-sm">Help us improve Streaker</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-gray-700/50 rounded-xl"
+              className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-gray-700/50 rounded-xl flex-shrink-0"
               aria-label="Close modal"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5" />
             </button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Feedback Type Selection */}
             <div>
-              <label className="block text-lg font-semibold text-white mb-4">
+              <label className="block text-base sm:text-lg font-semibold text-white mb-3">
                 What would you like to share?
               </label>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 {[
                   { value: 'feedback', label: 'Feedback', icon: MessageSquare },
                   { value: 'feature', label: 'Feature', icon: Lightbulb },
@@ -134,14 +137,14 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ isOpen, onClose }) => {
                       className="sr-only"
                     />
                     <div className={`
-                      flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-300
+                      flex flex-col items-center p-3 sm:p-4 rounded-xl border-2 transition-all duration-300
                       ${type === option.value 
                         ? 'border-blue-500 bg-blue-500/20 text-blue-300' 
                         : 'border-gray-600 bg-gray-700/30 text-gray-400 hover:border-gray-500 hover:bg-gray-600/30'
                       }
                     `}>
-                      <option.icon className="w-6 h-6 mb-2" />
-                      <span className="text-sm font-medium">{option.label}</span>
+                      <option.icon className="w-4 h-4 sm:w-5 sm:h-5 mb-1 sm:mb-2" />
+                      <span className="text-xs sm:text-sm font-medium text-center">{option.label}</span>
                     </div>
                   </label>
                 ))}
@@ -150,7 +153,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ isOpen, onClose }) => {
 
             {/* Description */}
             <div>
-              <label className="block text-lg font-semibold text-white mb-3">
+              <label className="block text-base sm:text-lg font-semibold text-white mb-3">
                 Tell us more
               </label>
               <div className="relative">
@@ -158,11 +161,12 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ isOpen, onClose }) => {
                   required
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full p-4 border border-gray-600 rounded-xl bg-gray-700/50 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
+                  maxLength={500}
+                  className="w-full p-3 sm:p-4 border border-gray-600 rounded-xl bg-gray-700/50 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none text-sm sm:text-base"
                   rows={4}
                   placeholder={`Share your ${type === 'bug' ? 'bug report' : type === 'feature' ? 'feature idea' : 'feedback'} with us...`}
                 />
-                <div className="absolute bottom-3 right-3 text-xs text-gray-500">
+                <div className="absolute bottom-2 right-3 text-xs text-gray-500">
                   {description.length}/500
                 </div>
               </div>
@@ -170,14 +174,14 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ isOpen, onClose }) => {
 
             {/* Email */}
             <div>
-              <label className="block text-lg font-semibold text-white mb-3">
+              <label className="block text-base sm:text-lg font-semibold text-white mb-3">
                 Email <span className="text-gray-400 font-normal">(optional)</span>
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-4 border border-gray-600 rounded-xl bg-gray-700/50 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                className="w-full p-3 sm:p-4 border border-gray-600 rounded-xl bg-gray-700/50 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
                 placeholder="your@email.com"
               />
               <p className="text-xs text-gray-500 mt-2">
@@ -189,7 +193,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ isOpen, onClose }) => {
             <button
               type="submit"
               disabled={isSubmitting || !description.trim()}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:from-gray-600 disabled:to-gray-700 text-white py-4 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:hover:scale-100 disabled:opacity-50 font-semibold text-lg flex items-center justify-center gap-3"
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:from-gray-600 disabled:to-gray-700 text-white py-3 sm:py-4 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:hover:scale-100 disabled:opacity-50 font-semibold text-base sm:text-lg flex items-center justify-center gap-3"
             >
               {isSubmitting ? (
                 <>
@@ -198,7 +202,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ isOpen, onClose }) => {
                 </>
               ) : (
                 <>
-                  <Send className="w-5 h-5" />
+                  <Send className="w-4 h-4 sm:w-5 sm:h-5" />
                   Send Feedback
                 </>
               )}
@@ -209,29 +213,32 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ isOpen, onClose }) => {
 
       {/* Success/Error Alert Modal */}
       {alert.isOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-60 p-4 animate-fade-in">
-          <div className="bg-gray-800/95 backdrop-blur-xl rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl border border-gray-700/50 animate-bounce-in">
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+          style={{ zIndex: 10000 }}
+        >
+          <div className="bg-gray-800/95 backdrop-blur-xl rounded-2xl p-6 sm:p-8 w-full max-w-md shadow-2xl border border-gray-700/50 animate-bounce-in">
             <div className="flex flex-col items-center space-y-6 text-center">
               {alert.isSuccess ? (
-                <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-4 rounded-full">
-                  <CheckCircle className="w-12 h-12 text-white" />
+                <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-3 sm:p-4 rounded-full">
+                  <CheckCircle className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
                 </div>
               ) : (
-                <div className="bg-gradient-to-r from-red-500 to-pink-500 p-4 rounded-full">
-                  <AlertCircle className="w-12 h-12 text-white" />
+                <div className="bg-gradient-to-r from-red-500 to-pink-500 p-3 sm:p-4 rounded-full">
+                  <AlertCircle className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
                 </div>
               )}
               
               <div>
-                <h2 className="text-2xl font-bold text-white mb-2">
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
                   {alert.isSuccess ? 'Thank You!' : 'Oops!'}
                 </h2>
-                <p className="text-gray-300 text-lg leading-relaxed">{alert.message}</p>
+                <p className="text-gray-300 text-base sm:text-lg leading-relaxed">{alert.message}</p>
               </div>
               
               <button
                 onClick={closeAlert}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white py-3 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 font-semibold flex items-center gap-2"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white py-3 px-6 sm:px-8 rounded-xl transition-all duration-300 transform hover:scale-105 font-semibold flex items-center gap-2"
               >
                 <Sparkles className="w-4 h-4" />
                 Got it!
